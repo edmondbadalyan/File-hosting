@@ -27,6 +27,7 @@ namespace Test_Console
             User user = authorization_controller.Authenticate(email, password);
             if(user is null)
             {
+                Console.WriteLine("User created!")
                 await user_controller.CreateUser(email, password);
             }
             else
