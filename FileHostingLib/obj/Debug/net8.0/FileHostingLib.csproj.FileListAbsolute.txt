@@ -1,0 +1,13 @@
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\bin\Debug\net8.0\FileHostingLib.deps.json
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\bin\Debug\net8.0\FileHostingLib.dll
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\bin\Debug\net8.0\FileHostingLib.pdb
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\net8.0\FileHostingLib.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\net8.0\FileHostingLib.csproj.CoreCompileInputs.cache
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\net8.0\FileHostingLib.dll
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\net8.0\refint\FileHostingLib.dll
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\net8.0\FileHostingLib.pdb
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\net8.0\ref\FileHostingLib.dll
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\bin\Debug\net8.0\FileHostingLib.runtimeconfig.json
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\net8.0\FileHostingLib.csproj.AssemblyReference.cache
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\net8.0\FileHostingLib.genruntimeconfig.cache
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\bin\Debug\net8.0\settings.json

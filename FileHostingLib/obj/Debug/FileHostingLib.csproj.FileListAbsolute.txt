@@ -1,0 +1,6 @@
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\bin\Debug\FileHostingLib.dll
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\bin\Debug\FileHostingLib.pdb
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\FileHostingLib.csproj.AssemblyReference.cache
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\FileHostingLib.csproj.CoreCompileInputs.cache
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\FileHostingLib.dll
+C:\Users\Роман\source\repos\FileHostingLib\FileHostingLib\obj\Debug\FileHostingLib.pdb
