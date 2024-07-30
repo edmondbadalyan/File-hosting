@@ -36,7 +36,14 @@
             <Setter Property="Foreground" Value="Aqua"/>
             <Setter Property="Opacity" Value="0.4"/>
         </Style>
+        <Style TargetType="{x:Type Hyperlink}">
+            <Setter Property="Foreground" Value="Aqua"/>
+        </Style>
         <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
+            <Setter Property="Foreground" Value="Aqua"/>
+            <Setter Property="Background" Value="DarkSlateGray"/>
+        </Style>
+        <Style TargetType="{x:Type PasswordBox}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
             <Setter Property="Foreground" Value="Aqua"/>
             <Setter Property="Background" Value="DarkSlateGray"/>
         </Style>
