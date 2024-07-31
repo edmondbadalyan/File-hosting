@@ -13,21 +13,23 @@ namespace HostingLib.Controllers
         private readonly byte[] key;
         private readonly byte[] iv;
 
-        public EncryptionController()
+        public byte[] GetKey => key;
+        public byte[] GetIv => iv;
+
+        public EncryptionController(byte[] _key, byte[] _iv)
         {
-            var (loadedKey, loadedIv) = LoadKeyAndIv("key_iv.dat");
-            if(loadedKey == null & loadedIv == null)
+            if (_key.Length != 16 && _key.Length != 24 && _key.Length != 32)
             {
-                var (generatedKey, generatedIv) = GenerateKeyAndIv();
-                key = generatedKey;
-                iv = generatedIv;
-                SaveKeyAndIv("key_iv.dat", generatedKey, generatedIv);
+                throw new ArgumentException("Key size must be 16, 24, or 32 bytes.");
             }
-            else
+
+            if (_iv.Length != 16)
             {
-                key = loadedKey;
-                iv = loadedIv;
+                throw new ArgumentException("IV size must be 16 bytes.");
             }
+
+            key = _key;
+            iv = _iv;
         }
 
         public byte[] Encrypt(string plainText)
@@ -93,61 +95,29 @@ namespace HostingLib.Controllers
             File.WriteAllBytes(output_file, decrypted_contents);
         }
 
-        public string EncryptPassword(string password)
+        public string EncryptData(string data)
         {
-            byte[] encrypted_data = Encrypt(password);
-            return Convert.ToBase64String(encrypted_data);
+            byte[] encrypted_bytes = Encrypt(data);
+            return Convert.ToBase64String(encrypted_bytes);
         }
 
-        public string DecryptPassword(string encrypted_password)
+        public string DecryptData(string encrypted_data)
         {
-            byte[] encrypted_data = Convert.FromBase64String(encrypted_password);
-            return Decrypt(encrypted_data);
+            byte[] encrypted_bytes = Convert.FromBase64String(encrypted_data);
+            return Decrypt(encrypted_bytes);
         }
 
-        public static (byte[] key, byte[] iv) GenerateKeyAndIv(int keySize = 16)
+        public static (byte[] key, byte[] iv) GenerateKeyAndIv(int key_size = 16)
         {
-            if (keySize != 16 && keySize != 24 && keySize != 32)
+            if (key_size != 16 && key_size != 24 && key_size != 32)
             {
                 throw new ArgumentException("Key size must be 16, 24, or 32 bytes.");
             }
 
-            byte[] keyBytes = RandomNumberGenerator.GetBytes(keySize);
-            byte[] ivBytes = RandomNumberGenerator.GetBytes(16);
+            byte[] key_bytes = RandomNumberGenerator.GetBytes(key_size);
+            byte[] iv_bytes = RandomNumberGenerator.GetBytes(16);
 
-            return (keyBytes, ivBytes);
-        }
-
-        public static void SaveKeyAndIv(string filePath, byte[] key, byte[] iv)
-        {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-            using (var binaryWriter = new BinaryWriter(fileStream))
-            {
-                binaryWriter.Write(key.Length);
-                binaryWriter.Write(key);
-                binaryWriter.Write(iv.Length);
-                binaryWriter.Write(iv);
-            }
-        }
-
-        public static (byte[] key, byte[] iv) LoadKeyAndIv(string filePath)
-        {
-            try
-            {
-                using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                using (var binaryReader = new BinaryReader(fileStream))
-                {
-                    int keyLength = binaryReader.ReadInt32();
-                    byte[] key = binaryReader.ReadBytes(keyLength);
-                    int ivLength = binaryReader.ReadInt32();
-                    byte[] iv = binaryReader.ReadBytes(ivLength);
-                    return (key, iv);
-                }
-            }
-            catch(FileNotFoundException ex)
-            {
-                return (null, null);
-            }
+            return (key_bytes, iv_bytes);
         }
     }
 }
