@@ -9,16 +9,16 @@
         Title="LoginWindow" Height="300" Width="350">
     <Grid>
         <StackPanel>
-            <TextBlock Margin="10">Email:</TextBlock>
+            <TextBlock Margin="10">Электронная почта:</TextBlock>
             <TextBox Margin="10" Text="{Binding Email}"></TextBox>
             
-            <TextBlock Margin="10">Password:</TextBlock>
+            <TextBlock Margin="10">Пароль:</TextBlock>
             <PasswordBox Margin="10"></PasswordBox>
             
-            <Button Click="Button_Login" Margin="10">Send</Button>
+            <Button Click="Button_Login" Margin="10">Войти</Button>
 
             <TextBlock Margin="10">
-                <Hyperlink Click="Button_ForgotPassword">Forgot password?</Hyperlink>
+                <Hyperlink Click="Button_ForgotPassword">Забыли пароль?</Hyperlink>
             </TextBlock>
         </StackPanel>
     </Grid>

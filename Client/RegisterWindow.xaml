@@ -6,8 +6,19 @@
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="RegisterWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="RegisterWindow" Height="300" Width="350">
+    <StackPanel>
+        <TextBlock Margin="10">Электронная почта:</TextBlock>
+        <TextBox Margin="10" Text="{Binding Email}"></TextBox>
+
+        <TextBlock Margin="10">Пароль:</TextBlock>
+        <PasswordBox Margin="10" PasswordChar="*"
+                     PasswordChanged="PasswordChanged"></PasswordBox>
+
+        <CheckBox Margin="10" IsChecked="{Binding AgreeWithTerms}">
+            <Hyperlink Click="Button_Terms">Согласны с условиями?</Hyperlink>
+        </CheckBox>
+
+        <Button Click="Button_Send" Margin="10">Зарегестрироваться</Button>
+    </StackPanel>
 </Window>
