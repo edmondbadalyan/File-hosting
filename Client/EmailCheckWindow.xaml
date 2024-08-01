@@ -1,0 +1,19 @@
+﻿<Window x:Class="Client.EmailCheckWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Client"
+        mc:Ignorable="d"
+        Closing="Window_Closing"
+        Title="EmailCheckWindow" Height="300" Width="350">
+    <StackPanel>
+        <TextBlock Margin="10">Электронная почта:</TextBlock>
+        <TextBlock Margin="10" Text="{Binding Email}"></TextBlock>
+
+        <TextBlock Margin="10">Секретный шестизначный код:</TextBlock>
+        <PasswordBox Margin="10"></PasswordBox>
+
+        <Button Click="Button_Send" Margin="10">Подтвердить</Button>
+    </StackPanel>
+</Window>
