@@ -1,12 +1,19 @@
-﻿using HostingLib.Controllers;
+﻿using Azure.Core;
+using HostingLib.Classes;
+using HostingLib.Controllers;
 using HostingLib.Data.Context;
 using HostingLib.Data.Entities;
+using HostingLib.Helpers;
+using HostingLib.Сlient;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Request = HostingLib.Classes.Request;
 
 namespace Test_Console
 {
@@ -14,26 +21,32 @@ namespace Test_Console
     {
         static async Task Main(string[] args)
         {
-            HostingDbContext context = new();
-
-            AuthorizationController authorization_controller = new(context);
-            UserController user_controller = new(context);
+            TcpClient server;
+            server = new("192.168.0.12", 2024);
 
             string email, password;
             Console.WriteLine("Input email and password!");
             email = Console.ReadLine();
             password = Console.ReadLine();
 
-            User user = authorization_controller.Authenticate(email, password);
-            if(user is null)
+            User received_user = await Client.GetUserAsync(server, email);
+            //if(received_user == null)
+            //{
+            //    await Client.CreateUserAsync(server, email, password);
+            //}
+            //else
+            //{
+            //    Console.WriteLine($"{received_user.Id} {received_user.Email} {received_user.Password}");
+            //}
+
+            if (received_user != null)
             {
-                Console.WriteLine("User created!")
-                await user_controller.CreateUser(email, password);
+                Console.WriteLine("Enter new password!");
+                password = Console.ReadLine();
+                await Client.UpdateUserAsync(server, received_user, password);
             }
-            else
-            {
-                Console.WriteLine($"Welcome, {user.Email}!");
-            }
+
+
         }
     }
 }

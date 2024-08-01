@@ -11,32 +11,26 @@ namespace HostingLib.Controllers
 {
     public class AuthorizationController
     {
-        private readonly HostingDbContext context;
-        private readonly EncryptionController encryption_controller;
 
-        public AuthorizationController(HostingDbContext context)
+        public static async Task<User> Authenticate(User user, string given_password)
         {
-            this.context = context;
-            encryption_controller = new EncryptionController();
-        }
-
-        public User Authenticate(string email, string password)
-        {
-            User user = context.Users.SingleOrDefault(u => u.Email == email);
             if (user is not null)
             {
-                if(encryption_controller.DecryptPassword(user.Password) == password)
+                EncryptionController encryption_controller = new(user.EncryptionKey, user.Iv);
+                if(encryption_controller.DecryptData(user.Password) == given_password)
                 {
-                    Console.WriteLine($"User found: {email}");
+                    Console.WriteLine($"User found: {user.Id} {user.Email}");
                     return user;
                 }
             }
             return null;
         }
 
-        public bool Authorize(User user, int fileId)
+        public static async Task<bool> Authorize(User user, int fileId)
         {
-            return context.User_Files.Any(uf => uf.User_id == user.Id && uf.File_id == fileId);
+            using HostingDbContext context = new();
+            bool isAuthorized = await context.User_Files.AnyAsync(uf => uf.User_id == user.Id && uf.File_id == fileId);
+            return isAuthorized;
         }
     }
 }

@@ -27,7 +27,6 @@ namespace HostingLib.Data.Context
                 .AddJsonFile("settings.json", optional: false, reloadOnChange: true)
                 .Build();
 
-            Console.WriteLine(Directory.GetCurrentDirectory());
             connection_string = config.GetConnectionString("Test");
         }
 
