@@ -34,6 +34,8 @@ namespace Client
             Model.IsFromLogin = previous is LoginWindow;
             Model.IsFromRegistration = previous is RegisterWindow;
 
+            DataContext = Model;
+
             SendCode();
         }
 
@@ -50,7 +52,7 @@ namespace Client
             }
             Model.Code = msg;
 
-            message.Subject = "Код для восстановления пароля";
+            message.Subject = "Подтвердите вашу почту";
 
             message.IsBodyHtml = true;
 
