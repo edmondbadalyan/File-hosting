@@ -15,7 +15,7 @@ namespace HostingLib.Сlient
 {
     public class Client
     {
-        public static async Task<User> GetUserAsync(TcpClient server, string email)
+        public static async Task<User> GetUserAsync(TcpClient server, string email, string password)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
@@ -28,7 +28,7 @@ namespace HostingLib.Сlient
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, appended_request);
 
-            return JsonConvert.DeserializeObject<User>(response.Payload);
+            return await AuthorizationController.Authenticate(JsonConvert.DeserializeObject<User>(response.Payload), password);
         }
 
         public static async Task CreateUserAsync(TcpClient server, string email, string password)
