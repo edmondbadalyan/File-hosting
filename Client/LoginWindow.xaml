@@ -12,7 +12,7 @@
         <TextBox Margin="10" Text="{Binding Email}"></TextBox>
 
         <TextBlock Margin="10">Пароль:</TextBlock>
-        <PasswordBox Margin="10"></PasswordBox>
+        <PasswordBox Margin="10" PasswordChanged="PasswordChanged"></PasswordBox>
 
         <Button Click="Button_Login" Margin="10">Войти</Button>
 

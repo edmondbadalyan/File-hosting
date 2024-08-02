@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net.Sockets;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -16,9 +17,11 @@ namespace Client {
     public partial class MainWindow : Window {
         LoginWindow login;
         RegisterWindow register;
+        public TcpClient Server { get; set; }
 
         public MainWindow() {
             InitializeComponent();
+            Server = new("192.168.0.12", 2024);
         }
 
         private void Button_Login(object sender, RoutedEventArgs e) {
@@ -37,11 +40,13 @@ namespace Client {
             Visibility = Visibility.Visible;
             if (login is not null && login != window) login.Close();
             else if (register is not null && register != window) register.Close();
+            Server.Dispose();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             if (login is not null) login.Close();
             else if (register is not null) register.Close();
+            Server.Dispose();
         }
     }
 }
