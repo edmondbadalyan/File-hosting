@@ -29,7 +29,7 @@ namespace Test_Console
             email = Console.ReadLine();
             password = Console.ReadLine();
 
-            User received_user = await Client.GetUserAsync(server, email);
+            User received_user = await Client.GetUserAsync(server, email, password);
             //if(received_user == null)
             //{
             //    await Client.CreateUserAsync(server, email, password);

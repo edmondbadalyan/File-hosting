@@ -1,19 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using ClientCommands = HostingLib.Сlient.Client;
 
-namespace Client
-{
+namespace Client {
     /// <summary>
     /// Логика взаимодействия для PasswordChangeWindow.xaml
     /// </summary>
@@ -39,9 +28,13 @@ namespace Client
             PasswordCopy = (PasswordBox)sender;
         }
 
-        private void Button_Send(object sender, RoutedEventArgs e) {
+        private async void Button_Send(object sender, RoutedEventArgs e) {
             if (Validation.ValidatePassword(Password) && Validation.ValidatePassword(PasswordCopy) && Password.Password == PasswordCopy.Password) {
-                // отправка на сервер
+                await ClientCommands.UpdateUserAsync(
+                    mainWindow.Server, 
+                    await ClientCommands.GetUserAsync(mainWindow.Server, email, null),
+                    Password.Password
+                );
 
                 mainWindow.GoBack(this);
             }

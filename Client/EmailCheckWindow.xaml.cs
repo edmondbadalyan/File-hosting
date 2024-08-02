@@ -65,10 +65,12 @@ namespace Client
         private void Button_Send(object sender, RoutedEventArgs e) {
             if (Model.Code == Model.CodeInput) {
                 if (Model.IsFromLogin) {
-                    // пускаем в форму смены пароля
+                    PasswordChangeWindow window = new PasswordChangeWindow(mainWindow, this, Model.Email);
+                    this.Visibility = Visibility.Hidden;
+                    window.ShowDialog();
                 }
                 else if (Model.IsFromRegistration) {
-                    // пускаем в приложение и подтверждаем отправку данных
+                    // пускаем в приложение
                 }
             }
             else {

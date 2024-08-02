@@ -8,9 +8,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_Console", "Test_Consol
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TCPLib", "TCPLib\TCPLib.csproj", "{5B38AF20-964A-45A2-BAF0-13353A81A6CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test_Server", "Test_Server\Test_Server.csproj", "{AC384F87-ABE0-449F-BE81-DD0985BF2602}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_Server", "Test_Server\Test_Server.csproj", "{AC384F87-ABE0-449F-BE81-DD0985BF2602}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{2AEF66DC-0819-4D9D-841E-E77D730D2E06}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csproj", "{2AEF66DC-0819-4D9D-841E-E77D730D2E06}"
+	ProjectSection(ProjectDependencies) = postProject
+		{438D84FB-47B5-4E8C-9029-FFE2E0E5BF76} = {438D84FB-47B5-4E8C-9029-FFE2E0E5BF76}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
