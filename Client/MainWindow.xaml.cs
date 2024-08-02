@@ -21,7 +21,7 @@ namespace Client {
 
         public MainWindow() {
             InitializeComponent();
-            Server = new("192.168.0.12", 2024);
+            Server = new("192.168.1.133", 2024);
         }
 
         private void Button_Login(object sender, RoutedEventArgs e) {

@@ -17,6 +17,8 @@ namespace Client {
 
             this.mainWindow = mainWindow;
             Model = model;
+
+            DataContext = Model;
         }        
 
         private void Button_Terms(object sender, RoutedEventArgs e) {
