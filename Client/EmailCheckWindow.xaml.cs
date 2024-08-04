@@ -86,5 +86,9 @@ namespace Client
             }
             mainWindow.GoBack(this);
         }
+
+        private void PasswordChanged(object sender, RoutedEventArgs e) {
+            Model.CodeInput = ((PasswordBox)sender).Password;
+        }
     }
 }
