@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using HostingLib.Data.Entities;
+using System.Windows;
 using System.Windows.Controls;
 using ClientCommands = HostingLib.Сlient.Client;
 
@@ -30,11 +31,12 @@ namespace Client {
 
         private async void Button_Send(object sender, RoutedEventArgs e) {
             if (Validation.ValidatePassword(Password) && Validation.ValidatePassword(PasswordCopy) && Password.Password == PasswordCopy.Password) {
-                await ClientCommands.UpdateUserAsync(
+                User user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, email, null));
+                await Task.Run(async () => await ClientCommands.UpdateUserAsync(
                     mainWindow.Server, 
-                    await ClientCommands.GetUserAsync(mainWindow.Server, email, null),
+                    user,
                     Password.Password
-                );
+                ));
 
                 mainWindow.GoBack(this);
             }
