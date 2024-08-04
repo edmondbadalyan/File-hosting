@@ -56,7 +56,7 @@ namespace Client
 
             message.IsBodyHtml = true;
 
-            using SmtpClient smtpClient = new SmtpClient("smtp.mail.ru");
+            using SmtpClient smtpClient = new SmtpClient("smtp.mail.ru", 587);
             smtpClient.Credentials = new NetworkCredential("p_recovery@inbox.ru", "g56ZgHrHERyVmG717v37");
             smtpClient.EnableSsl = true;
             message.Body = $@"<h1>Код: {msg}</h1>";
@@ -85,6 +85,10 @@ namespace Client
                 // удаляем из бд данные об этом пользователе
             }
             mainWindow.GoBack(this);
+        }
+
+        private void PasswordChanged(object sender, RoutedEventArgs e) {
+            Model.CodeInput = ((PasswordBox)sender).Password;
         }
     }
 }
