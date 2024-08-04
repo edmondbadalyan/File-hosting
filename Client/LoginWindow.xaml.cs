@@ -49,7 +49,7 @@ namespace Client {
         private async void Button_Login(object sender, RoutedEventArgs e) {
             if (!CheckEmail() || !CheckPassword()) return;
 
-            User? user = await ClientCommands.GetUserAsync(mainWindow.Server, Model.Email, PasswordBox.Password);
+            User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, Model.Email, PasswordBox.Password));
 
             if (user is null) {
                 MessageBox.Show("Incorrect data");
