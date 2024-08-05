@@ -49,5 +49,18 @@ namespace HostingLib.Controllers
 
             Console.WriteLine($"Updated user {user.Email}, new password is {new_password}");
         }
+
+        public static async Task DeleteUser(User user)
+        {
+            using HostingDbContext context = new();
+
+            context.Users
+                .Remove(user);
+            await context.SaveChangesAsync();
+            await context.DisposeAsync();
+
+            Console.WriteLine($"Deleted user {user.Id} {user.Email}");
+        }
     }
+
 }

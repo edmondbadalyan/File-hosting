@@ -12,12 +12,12 @@ namespace HostingLib.Controllers
     public class AuthorizationController
     {
 
-        public static async Task<User> Authenticate(User user, string given_password)
+        public static User Authenticate(User user, string given_password)
         {
             if (user is not null)
             {
                 EncryptionController encryption_controller = new(user.EncryptionKey, user.Iv);
-                if(encryption_controller.DecryptData(user.Password) == given_password)
+                if (encryption_controller.DecryptData(user.Password) == given_password)
                 {
                     Console.WriteLine($"User found: {user.Id} {user.Email}");
                     return user;

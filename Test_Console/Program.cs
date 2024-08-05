@@ -22,7 +22,7 @@ namespace Test_Console
         static async Task Main(string[] args)
         {
             TcpClient server;
-            server = new("192.168.0.12", 2024);
+            server = new("192.168.0.10", 2024);
 
             string email, password;
             Console.WriteLine("Input email and password!");
@@ -41,9 +41,15 @@ namespace Test_Console
 
             if (received_user != null)
             {
-                Console.WriteLine("Enter new password!");
-                password = Console.ReadLine();
-                await Client.UpdateUserAsync(server, received_user, password);
+                User user = await Client.AuthenticateUserAsync(server, received_user, password);
+                if(user != null)
+                {
+                    Console.WriteLine($"{user.Id} {user.Email} {user.Password}");
+                }
+                else
+                {
+                    Console.WriteLine("Wrong password!");
+                }
             }
 
 

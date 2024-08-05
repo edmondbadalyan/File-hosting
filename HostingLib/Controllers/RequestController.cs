@@ -22,8 +22,9 @@ namespace HostingLib.Controllers
             { Requests.ENCRYPTED_DATA, new EncryptedDataHandler() },
             { Requests.USER_CREATE, new CreateUserHandler() },
             { Requests.USER_GET, new GetUserHandler() },
+            { Requests.USER_AUTHENTICATE, new AuthenticateUserHandler() },
             { Requests.USER_UPDATE, new UpdateUserHandler() },
-            { Requests.USER_AUTHORIZE, new AuthorizeUserHandler() }
+            { Requests.USER_DELETE, new DeleteUserHandler() },
         };
 
         public static async Task SendRequestAsync(TcpClient client, Request request)
