@@ -34,6 +34,8 @@ namespace Client
             Model.IsFromLogin = previous is LoginWindow;
             Model.IsFromRegistration = previous is RegisterWindow;
 
+            DataContext = Model;
+
             SendCode();
         }
 
@@ -50,11 +52,11 @@ namespace Client
             }
             Model.Code = msg;
 
-            message.Subject = "Код для восстановления пароля";
+            message.Subject = "Подтвердите вашу почту";
 
             message.IsBodyHtml = true;
 
-            using SmtpClient smtpClient = new SmtpClient("smtp.mail.ru");
+            using SmtpClient smtpClient = new SmtpClient("smtp.mail.ru", 587);
             smtpClient.Credentials = new NetworkCredential("p_recovery@inbox.ru", "g56ZgHrHERyVmG717v37");
             smtpClient.EnableSsl = true;
             message.Body = $@"<h1>Код: {msg}</h1>";
@@ -65,10 +67,12 @@ namespace Client
         private void Button_Send(object sender, RoutedEventArgs e) {
             if (Model.Code == Model.CodeInput) {
                 if (Model.IsFromLogin) {
-                    // пускаем в форму смены пароля
+                    PasswordChangeWindow window = new PasswordChangeWindow(mainWindow, this, Model.Email);
+                    this.Visibility = Visibility.Hidden;
+                    window.ShowDialog();
                 }
                 else if (Model.IsFromRegistration) {
-                    // пускаем в приложение и подтверждаем отправку данных
+                    // пускаем в приложение
                 }
             }
             else {
@@ -81,6 +85,10 @@ namespace Client
                 // удаляем из бд данные об этом пользователе
             }
             mainWindow.GoBack(this);
+        }
+
+        private void PasswordChanged(object sender, RoutedEventArgs e) {
+            Model.CodeInput = ((PasswordBox)sender).Password;
         }
     }
 }

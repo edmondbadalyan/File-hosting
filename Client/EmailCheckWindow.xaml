@@ -12,7 +12,7 @@
         <TextBlock Margin="10" Text="{Binding Email}"></TextBlock>
 
         <TextBlock Margin="10">Секретный шестизначный код:</TextBlock>
-        <PasswordBox Margin="10"></PasswordBox>
+        <PasswordBox Margin="10" PasswordChanged="PasswordChanged"></PasswordBox>
 
         <Button Click="Button_Send" Margin="10">Подтвердить</Button>
     </StackPanel>
