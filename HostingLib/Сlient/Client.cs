@@ -19,6 +19,7 @@ namespace HostingLib.Сlient
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
+
             string encrypted_email = encryption_controller.EncryptData(email);
 
             ClientEncryptionHelper encryption_helper = new(server, key, iv);
@@ -33,10 +34,27 @@ namespace HostingLib.Сlient
             return password is null ? user : await AuthorizationController.Authenticate(user, password);
         }
 
+        public static async Task<User> AuthenticateUserAsync(TcpClient server, User user, string given_password)
+        {
+            EncryptionController encryption_controller = new(user.EncryptionKey, user.Iv);
+
+            string encrypted_password = encryption_controller.EncryptData(given_password);
+
+            ClientEncryptionHelper encryption_helper = new(server, user.EncryptionKey, user.Iv);
+
+            UserPayload request_payload = new(JsonConvert.SerializeObject(user), null, encrypted_password);
+            Request request = new(Requests.USER_AUTHENTICATE, Payloads.USER, JsonConvert.SerializeObject(request_payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            return JsonConvert.DeserializeObject<User>(response.Payload);
+        }
+
         public static async Task CreateUserAsync(TcpClient server, string email, string password)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
+
             string encrypted_email = encryption_controller.EncryptData(email);
             string encrypted_password = encryption_controller.EncryptData(password);
 
@@ -60,7 +78,18 @@ namespace HostingLib.Сlient
             Request request = new(Requests.USER_UPDATE, Payloads.USER, JsonConvert.SerializeObject(request_payload));
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
-            Console.Write(response.Payload);
+            Console.WriteLine(response.Payload);
+        }
+
+        public static async Task DeleteUserAsync(TcpClient server, User user)
+        {
+            ClientEncryptionHelper encryption_helper = new(server, user.EncryptionKey, user.Iv);
+
+            UserPayload request_payload = new(JsonConvert.SerializeObject(user), null, null);
+            Request request = new(Requests.USER_DELETE, Payloads.USER, JsonConvert.SerializeObject(request_payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+            Console.WriteLine(response.Payload);
         }
     }
 }

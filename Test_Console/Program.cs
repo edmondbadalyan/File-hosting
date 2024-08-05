@@ -44,7 +44,18 @@ namespace Test_Console
             //    await Client.UpdateUserAsync(server, received_user, password);
             //}
 
-
+            if (received_user != null)
+            {
+                User user = await Client.AuthenticateUserAsync(server, received_user, password);
+                if(user != null)
+                {
+                    Console.WriteLine($"{user.Id} {user.Email} {user.Password}");
+                }
+                else
+                {
+                    Console.WriteLine("Wrong password!");
+                }
+            }
         }
     }
 }

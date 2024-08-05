@@ -126,14 +126,14 @@ namespace HostingLib.Handlers
         }
     }
 
-    public class AuthorizeUserHandler : IRequestHandler<Response>
+    public class AuthenticateUserHandler : IRequestHandler<Response>
     {
         public async Task<Response> HandleAsync(Request request)
         {
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
-                User user = await AuthorizationController.Authenticate(JsonConvert.DeserializeObject<User>(payload.User), payload.Password);
+                User user = AuthorizationController.Authenticate(JsonConvert.DeserializeObject<User>(payload.User), payload.Password);
                 return new(Responses.Success, Payloads.USER, JsonConvert.SerializeObject(user));
             }
             catch (Exception ex)
@@ -153,6 +153,24 @@ namespace HostingLib.Handlers
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
                 await UserController.UpdateUser(user, payload.Password);
                 return new(Responses.Success, Payloads.MESSAGE, "User updated successfully!");
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+    public class DeleteUserHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(Request request)
+        {
+            try
+            {
+                UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
+                User user = JsonConvert.DeserializeObject<User>(payload.User);
+                await UserController.DeleteUser(user);
+                return new(Responses.Success, Payloads.MESSAGE, "User deleted successfully!");
             }
             catch (Exception ex)
             {
