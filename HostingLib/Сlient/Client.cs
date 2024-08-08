@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -15,7 +16,9 @@ namespace HostingLib.Сlient
 {
     public class Client
     {
-        public static async Task<User> GetUserAsync(TcpClient server, string email, string? password)
+        #region User
+
+        public static async Task<User> GetUserAsync(TcpClient server, string email)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
@@ -91,5 +94,85 @@ namespace HostingLib.Сlient
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
             Console.WriteLine(response.Payload);
         }
+        #endregion
+
+        #region File
+
+        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FilePayload payload = new(null, null, user.Id);
+            Request request = new(Requests.FILE_GETALL, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            return JsonConvert.DeserializeObject<IList<Data.Entities.File>>(response.Payload);
+        }
+
+        public static async Task<HostingLib.Data.Entities.File> GetFileAsync(TcpClient server, HostingLib.Data.Entities.File file, User user)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FilePayload payload = new(JsonConvert.SerializeObject(file), null, user.Id);
+            Request request = new(Requests.FILE_GET, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            return JsonConvert.DeserializeObject<HostingLib.Data.Entities.File>(response.Payload);
+        }
+
+        public static async Task UploadFileAsync(TcpClient server, string from_file_path, User user)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FileInfo info = new(from_file_path);
+            FileDetails details = new(info.Name, info.Length, info.Extension, info.CreationTime);
+            FilePayload payload = new(null, JsonConvert.SerializeObject(details), user.Id);
+            Request request = new(Requests.FILE_UPLOAD, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            if(response.ResponseType == Responses.Success)
+            {
+                await FileController.UploadFileAsync(server, from_file_path);
+            }
+
+            response = await ResponseController.ReceiveResponseAsync(server);
+            Console.WriteLine(response.Payload);
+        }
+
+        public static async Task DownloadFileAsync(TcpClient server, string to_file_path, Data.Entities.File file, User user)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FilePayload payload = new(JsonConvert.SerializeObject(file), null, user.Id);
+            Request request = new(Requests.FILE_DOWNLOAD, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            if (response.ResponseType == Responses.Success)
+            {
+                await FileController.DownloadFileAsync(server, to_file_path);
+            }
+
+            response = await ResponseController.ReceiveResponseAsync(server);
+            Console.WriteLine(response.Payload);
+
+        }
+
+        #endregion
     }
 }

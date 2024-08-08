@@ -80,6 +80,33 @@ namespace HostingLib.Controllers
             }
         }
 
+
+        public async Task EncryptStreamAsync(Stream input, Stream output)
+        {
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = key;
+                aes.IV = iv;
+                using (CryptoStream cryptoStream = new CryptoStream(output, aes.CreateEncryptor(), CryptoStreamMode.Write))
+                {
+                    await input.CopyToAsync(cryptoStream);
+                }
+            }
+        }
+
+        public async Task DecryptStreamAsync(Stream input, Stream output)
+        {
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = key;
+                aes.IV = iv;
+                using (CryptoStream cryptoStream = new CryptoStream(input, aes.CreateDecryptor(), CryptoStreamMode.Read))
+                {
+                    await cryptoStream.CopyToAsync(output);
+                }
+            }
+        }
+
         public void EncryptFile(string input_file, string output_file)
         {
             byte[] file_contents = File.ReadAllBytes(input_file);

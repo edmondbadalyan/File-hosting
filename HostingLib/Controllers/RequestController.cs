@@ -16,7 +16,9 @@ namespace HostingLib.Controllers
 {
     public class RequestController
     {
-        public static readonly Dictionary<Requests, object> request_handlers = new()
+        private static readonly Dictionary<TcpClient, ClientState> client_states = new();
+
+        public static readonly Dictionary<Requests, IRequestHandler<Response>> request_handlers = new()
         {
             { Requests.GET_PUBLIC_KEY, new GetPublicKeyHandler() },
             { Requests.ENCRYPTED_DATA, new EncryptedDataHandler() },
@@ -25,30 +27,42 @@ namespace HostingLib.Controllers
             { Requests.USER_AUTHENTICATE, new AuthenticateUserHandler() },
             { Requests.USER_UPDATE, new UpdateUserHandler() },
             { Requests.USER_DELETE, new DeleteUserHandler() },
+            { Requests.FILE_UPLOAD, new UploadFileHandler() },
+            { Requests.FILE_DOWNLOAD, new DownloadFileHandler() },
+            { Requests.FILE_GETALL, new GetAllFilesHandler() },
+            { Requests.FILE_GET, new GetFileHandler() },
+            { Requests.FILE_DELETE, new DeleteFileHandler() },
         };
+
+        public static async Task HandleClientAsync(TcpClient client)
+        {
+            ClientState state = new(client);
+            client_states[client] = state;
+            await ReceiveRequestAsync(state);
+        }
 
         public static async Task SendRequestAsync(TcpClient client, Request request)
         {
             await TCP.SendString(client, JsonConvert.SerializeObject(request));
         }
 
-        public static async Task ReceiveRequestAsync(TcpClient client)
+        public static async Task ReceiveRequestAsync(ClientState state)
         {
-            string received_json = await TCP.ReceiveString(client);
+            string received_json = await TCP.ReceiveString(state.Client);
             Console.WriteLine(received_json);
             Request request = JsonConvert.DeserializeObject<Request>(received_json);
-            Response response = await HandleRequestAsync<Response>(request);
-            await ResponseController.SendResponseAsync(client, response);
+            Response response = await HandleRequestAsync<Response>(state, request);
+            await ResponseController.SendResponseAsync(state.Client, response);
         }
 
-        public static async Task<TResult> HandleRequestAsync<TResult>(Request request)
+        public static async Task<TResult> HandleRequestAsync<TResult>(ClientState state, Request request)
         {
             if (request_handlers.TryGetValue(request.RequestType, out var handler))
             {
                 var typed_handler = handler as IRequestHandler<TResult>;
                 if(typed_handler != null)
                 {
-                    return await typed_handler.HandleAsync(request);
+                    return await typed_handler.HandleAsync(state, request);
                 }
                 else
                 {

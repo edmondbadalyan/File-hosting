@@ -29,15 +29,12 @@ namespace Test_Console
             email = Console.ReadLine();
             password = Console.ReadLine();
 
-            User received_user = await Client.GetUserAsync(server, email, password);
-            if (received_user == null) {
+            User received_user = await Client.GetUserAsync(server, email);
+            if (received_user == null)
+            {
                 await Client.CreateUserAsync(server, email, password);
             }
-            else {
-                Console.WriteLine($"{received_user.Id} {received_user.Email} {received_user.Password}");
-            }
-
-            //if (received_user != null)
+            //else
             //{
             //    Console.WriteLine("Enter new password!");
             //    password = Console.ReadLine();
@@ -55,6 +52,15 @@ namespace Test_Console
                 {
                     Console.WriteLine("Wrong password!");
                 }
+            }
+            //string file_path = @"C:\Users\Роман\Downloads\NQoZ_CwqyEM.jpg";
+            //await Client.SendFileAsync(server, file_path, received_user.Id);
+
+            IList<HostingLib.Data.Entities.File> files = await Client.GetAllFilesAsync(server, received_user);
+
+            foreach(HostingLib.Data.Entities.File file in files)
+            {
+                Console.WriteLine($"{file.Name} {file.Path}");
             }
         }
     }

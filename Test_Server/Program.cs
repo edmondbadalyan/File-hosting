@@ -28,6 +28,6 @@ async void ListenToClient(TcpClient client)
     Console.WriteLine($"{client.Client.RemoteEndPoint} {DateTime.Now}");
     while (true)
     {
-        await RequestController.ReceiveRequestAsync(client);
+        await RequestController.HandleClientAsync(client);
     }
 }

@@ -13,7 +13,6 @@ namespace HostingLib.Data.Context
 
         public DbSet<User> Users { get; set; }
         public DbSet<HostingLib.Data.Entities.File> Files { get; set; }
-        public DbSet<User_Files> User_Files { get; set; }
 
         public HostingDbContext(DbContextOptions options) : base(options)
         {
@@ -30,11 +29,18 @@ namespace HostingLib.Data.Context
             connection_string = config.GetConnectionString("Test");
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Files)
+                .WithOne(f => f.User)
+                .HasForeignKey(f => f.UserId);
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (connection_string == null)
             {
-                
                 throw new InvalidOperationException("Connection string 'Test' is null.");
             }
             optionsBuilder.UseSqlServer(connection_string);

@@ -17,11 +17,6 @@ namespace HostingLib.Controllers
             string response_json = JsonConvert.SerializeObject(response);
             await TCP.SendString(client, response_json);
 
-            //для файлов - пока не трогаем
-            if (response.Payload != null && response.PayloadType == Payloads.FILE)
-            {
-                throw new NotImplementedException();
-            }
         }
 
         public static async Task<Response> ReceiveResponseAsync(TcpClient client)

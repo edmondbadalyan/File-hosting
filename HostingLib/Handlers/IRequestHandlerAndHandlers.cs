@@ -5,6 +5,7 @@ using HostingLib.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,12 +14,12 @@ namespace HostingLib.Handlers
 {
     public interface IRequestHandler<TResult>
     {
-        Task<TResult> HandleAsync(Classes.Request request);
+        Task<TResult> HandleAsync(ClientState state, Classes.Request request);
     }
 
     public class GetPublicKeyHandler : IRequestHandler<Response>
     {
-        public Task<Response> HandleAsync(Request request)
+        public Task<Response> HandleAsync(ClientState state, Request request)
         {
             try
             {
@@ -34,7 +35,7 @@ namespace HostingLib.Handlers
 
     public class EncryptedDataHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request)
         {
             try
             {
@@ -47,7 +48,7 @@ namespace HostingLib.Handlers
                 dynamic appended_request_payload = null;
                 Request decrypted_request = null;
 
-                switch(appended_request.PayloadType)
+                switch (appended_request.PayloadType)
                 {
                     case Payloads.USER:
                         {
@@ -56,17 +57,17 @@ namespace HostingLib.Handlers
 
                             appended_request_payload = JsonConvert.DeserializeObject<UserPayload>(appended_request.Payload);
 
-                            if(appended_request_payload.User != null)
+                            if (appended_request_payload.User != null)
                             {
                                 user = appended_request_payload.User;
                             }
 
-                            if(appended_request_payload.Email != null)
+                            if (appended_request_payload.Email != null)
                             {
                                 email = encryption_controller.DecryptData(appended_request_payload.Email);
                             }
 
-                            if(appended_request_payload.Password != null)
+                            if (appended_request_payload.Password != null)
                             {
                                 password = encryption_controller.DecryptData(appended_request_payload.Password);
                             }
@@ -78,11 +79,34 @@ namespace HostingLib.Handlers
                         }
                     case Payloads.FILE:
                         {
-                            throw new NotImplementedException();
+                            string file = null;
+                            string file_info = null;
+                            int user_id = 0;
+
+                            appended_request_payload = JsonConvert.DeserializeObject<FilePayload>(appended_request.Payload);
+
+                            if (appended_request_payload.File != null)
+                            {
+                                file = appended_request_payload.File;
+                            }
+
+                            if (appended_request_payload.FileDetails != null)
+                            {
+                                file_info = appended_request_payload.FileDetails;
+                            }
+
+                            user_id = appended_request_payload.UserId;
+
+                            appended_request_payload = new FilePayload(file, file_info, user_id);
+
+                            string new_payload = JsonConvert.SerializeObject(appended_request_payload);
+
+                            decrypted_request = new(appended_request.RequestType, Payloads.FILE, new_payload);
+                            break;
                         }
                 }
-                
-                Response response = await RequestController.HandleRequestAsync<Response>(decrypted_request);
+
+                Response response = await RequestController.HandleRequestAsync<Response>(state, decrypted_request);
                 return response;
             }
             catch (Exception ex)
@@ -92,9 +116,11 @@ namespace HostingLib.Handlers
         }
     }
 
+    #region User
+
     public class CreateUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request)
         {
             try
             {
@@ -111,7 +137,7 @@ namespace HostingLib.Handlers
 
     public class GetUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request)
         {
             try
             {
@@ -128,7 +154,7 @@ namespace HostingLib.Handlers
 
     public class AuthenticateUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request)
         {
             try
             {
@@ -145,7 +171,7 @@ namespace HostingLib.Handlers
 
     public class UpdateUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request)
         {
             try
             {
@@ -163,7 +189,7 @@ namespace HostingLib.Handlers
 
     public class DeleteUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request)
         {
             try
             {
@@ -178,5 +204,115 @@ namespace HostingLib.Handlers
             }
         }
     }
+    #endregion
 
+    #region File
+
+    public class UploadFileHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+                FileDetails info = JsonConvert.DeserializeObject<FileDetails>(payload.FileDetails);
+                string file_path = Path.Combine(FileController.storage_path, payload.UserId.ToString(), info.Name);
+
+                Response response = new Response(Responses.Success, Payloads.MESSAGE, "Ready to receive file");
+                await ResponseController.SendResponseAsync(state.Client, response);
+
+                await FileController.DownloadFileAsync(state.Client, file_path);
+                await FileController.CreateFile(info, payload.UserId);
+
+                return new(Responses.Success, Payloads.MESSAGE, "File uploaded successfully!");
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+    public class DownloadFileHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+                Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
+                string file_path = Path.Combine(FileController.storage_path, payload.UserId.ToString(), file.Name);
+
+                Response response = new Response(Responses.Success, Payloads.MESSAGE, "Ready to send file");
+                await ResponseController.SendResponseAsync(state.Client, response);
+
+                await FileController.UploadFileAsync(state.Client, file_path);
+
+                return new(Responses.Success, Payloads.MESSAGE, "File downloaded successfully!");
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+    public class GetAllFilesHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+
+                IList<Data.Entities.File> files = await FileController.GetAllFiles(payload.UserId);
+
+                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
+            }
+            catch(Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+    public class GetFileHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+                Data.Entities.File file_info = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
+                Data.Entities.File file = await FileController.GetFile(file_info.Name, payload.UserId);
+
+                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(file));
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+    public class DeleteFileHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+                Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
+                await FileController.DeleteFile(file);
+
+                return new(Responses.Success, Payloads.MESSAGE, "File deleted successfully!");
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+    #endregion
 }
