@@ -74,6 +74,7 @@ namespace Client
                     window.ShowDialog();
                 }
                 else if (Model.IsFromRegistration) {
+                    Model.IsFromRegistration = false;
                     mainWindow.GoBack(this);
                 }
             }
