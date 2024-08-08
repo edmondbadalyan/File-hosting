@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using HostingLib.Data.Entities;
+using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using ClientCommands = HostingLib.Сlient.Client;
 
-namespace Client
-{
+namespace Client {
     /// <summary>
     /// Логика взаимодействия для LoginWindow.xaml
     /// </summary>
@@ -21,12 +12,15 @@ namespace Client
     {
         MainWindow mainWindow;
         LoginWindowModel Model { get; set; }
+        PasswordBox PasswordBox { get; set; }
 
         public LoginWindow(MainWindow mainWindow, LoginWindowModel model) {
             InitializeComponent();
 
             this.mainWindow = mainWindow;
             Model = model;
+
+            DataContext = Model;
         }
 
         private bool CheckEmail() {
@@ -34,33 +28,41 @@ namespace Client
                 MessageBox.Show("Input email");
                 return false;
             }
-            // if (проверка существования пользователя через сервер) { 
-            //     MessageBox.Show("Incorrect email");
-            //     return false;
-            // }
             return true;
         }
         private bool CheckPassword() {
-            // if (проверка корректности пароля через сервер) { 
-            //     MessageBox.Show("Incorrect password");
-            //     return false;
-            // }
+            if (PasswordBox is null || PasswordBox.Password.Length == 0) {
+                MessageBox.Show("Input password");
+                return false;
+            }
             return true;
         }
 
         private void Button_ForgotPassword(object sender, RoutedEventArgs e) {
             if (!CheckEmail()) return;
 
-            // переход в окно смены пароля
+            EmailCheckWindow window = new EmailCheckWindow(mainWindow, this, new(Model.Email));
+            this.Visibility = Visibility.Hidden;
+            window.ShowDialog();
         }
 
-        private void Button_Login(object sender, RoutedEventArgs e) {
-            if (!CheckEmail()) return;
-            if (!CheckPassword()) return;
+        private async void Button_Login(object sender, RoutedEventArgs e) {
+            if (!CheckEmail() || !CheckPassword()) return;
+
+            User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, Model.Email, PasswordBox.Password));
+
+            if (user is null) {
+                MessageBox.Show("Incorrect data");
+                return;
+            }
 
             // переход в главное меню
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => mainWindow.GoBack(this);
+
+        private void PasswordChanged(object sender, RoutedEventArgs e) {
+            PasswordBox = (PasswordBox)sender;
+        }
     }
 }

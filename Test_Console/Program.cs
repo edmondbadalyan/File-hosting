@@ -22,7 +22,7 @@ namespace Test_Console
         static async Task Main(string[] args)
         {
             TcpClient server;
-            server = new("192.168.0.10", 2024);
+            server = new("192.168.1.133", 2024);
 
             string email, password;
             Console.WriteLine("Input email and password!");
@@ -36,7 +36,9 @@ namespace Test_Console
             }
             //else
             //{
-            //    Console.WriteLine($"{received_user.Id} {received_user.Email} {received_user.Password}");
+            //    Console.WriteLine("Enter new password!");
+            //    password = Console.ReadLine();
+            //    await Client.UpdateUserAsync(server, received_user, password);
             //}
 
             if (received_user != null)
@@ -51,8 +53,6 @@ namespace Test_Console
                     Console.WriteLine("Wrong password!");
                 }
             }
-
-
             //string file_path = @"C:\Users\Роман\Downloads\NQoZ_CwqyEM.jpg";
             //await Client.SendFileAsync(server, file_path, received_user.Id);
 
@@ -62,7 +62,6 @@ namespace Test_Console
             {
                 Console.WriteLine($"{file.Name} {file.Path}");
             }
-
         }
     }
 }
