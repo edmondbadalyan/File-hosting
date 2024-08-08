@@ -56,7 +56,9 @@ namespace Client {
                 return;
             }
 
-            // переход в главное меню
+            MainMenuWindow window = new MainMenuWindow(mainWindow, new(user));
+            this.Visibility = Visibility.Hidden;
+            window.ShowDialog();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => mainWindow.GoBack(this);
