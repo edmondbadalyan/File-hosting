@@ -30,10 +30,10 @@ namespace Test_Console
             password = Console.ReadLine();
 
             User received_user = await Client.GetUserAsync(server, email);
-            //if(received_user == null)
-            //{
-            //    await Client.CreateUserAsync(server, email, password);
-            //}
+            if (received_user == null)
+            {
+                await Client.CreateUserAsync(server, email, password);
+            }
             //else
             //{
             //    Console.WriteLine($"{received_user.Id} {received_user.Email} {received_user.Password}");
@@ -52,6 +52,16 @@ namespace Test_Console
                 }
             }
 
+
+            //string file_path = @"C:\Users\Роман\Downloads\NQoZ_CwqyEM.jpg";
+            //await Client.SendFileAsync(server, file_path, received_user.Id);
+
+            IList<HostingLib.Data.Entities.File> files = await Client.GetAllFilesAsync(server, received_user);
+
+            foreach(HostingLib.Data.Entities.File file in files)
+            {
+                Console.WriteLine($"{file.Name} {file.Path}");
+            }
 
         }
     }

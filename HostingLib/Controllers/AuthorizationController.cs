@@ -26,11 +26,11 @@ namespace HostingLib.Controllers
             return null;
         }
 
-        public static async Task<bool> Authorize(User user, int fileId)
-        {
-            using HostingDbContext context = new();
-            bool isAuthorized = await context.User_Files.AnyAsync(uf => uf.User_id == user.Id && uf.File_id == fileId);
-            return isAuthorized;
-        }
+        //public static async Task<bool> Authorize(User user, int fileId)
+        //{
+        //    using HostingDbContext context = new();
+        //    bool isAuthorized = await context.User_Files.AnyAsync(uf => uf.User_id == user.Id && uf.File_id == fileId);
+        //    return isAuthorized;
+        //}
     }
 }

@@ -22,6 +22,21 @@ namespace HostingLib.Classes
         }
     }
 
+    public class FilePayload
+    {
+        public Payloads Type = Payloads.FILE;
+        public string? File { get; set; }
+        public string? FileDetails { get; set; }
+        public int UserId { get; set; }
+
+        public FilePayload(string file, string fileInfo, int userId)
+        {
+            File = file;
+            FileDetails = fileInfo;
+            UserId = userId;
+        }
+    }
+
     public class EncryptedDataPayload
     {
         public Payloads Type = Payloads.DATA;
@@ -60,11 +75,13 @@ namespace HostingLib.Classes
         USER_AUTHENTICATE,
         USER_UPDATE,
         USER_DELETE,
-        FILE_CREATE,
-        FILE_DELETE,
-        FILE_MOVE,
         FILE_UPLOAD,
         FILE_DOWNLOAD,
+        FILE_CREATE,
+        FILE_GET,
+        FILE_GETALL,
+        FILE_DELETE,
+        FILE_MOVE,
     }
 
     public enum Payloads

@@ -3,6 +3,7 @@ using HostingLib.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,15 +24,29 @@ namespace HostingLib.Controllers
         {
             using HostingDbContext context = new();
 
-            var (key, iv) = EncryptionController.GenerateKeyAndIv();
-            EncryptionController encryption_controller = new(key, iv);
-            User user = new(email, encryption_controller.EncryptData(password), true, key, iv);
+            User user = await GetUser(email);
 
-            context.Users.Add(user);
-            await context.SaveChangesAsync();
-            await context.DisposeAsync();
+            if(user != null)
+            {
+                throw new Exception("Such user already exists!");
+            }
+            else
+            { 
+                var (key, iv) = EncryptionController.GenerateKeyAndIv();
+                EncryptionController encryption_controller = new(key, iv);
+                user = new(email, encryption_controller.EncryptData(password), true, key, iv);
 
-            Console.WriteLine($"User created successfully with email: {email} and password: {password} (encrypted - {user.Password}");
+                context.Users
+                    .Add(user);
+                await context.SaveChangesAsync();
+                await context.DisposeAsync();
+
+                string user_directory = Path.Combine(FileController.storage_path, user.Id.ToString());
+                Directory.CreateDirectory(user_directory);
+
+                Console.WriteLine($"User created successfully with email: {email} and password: {password} (encrypted - {user.Password}");
+            }
+
         }
 
         public static async Task UpdateUser(User user, string new_password)

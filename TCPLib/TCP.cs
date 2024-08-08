@@ -30,6 +30,8 @@ namespace TCPLib
         {
             await Console.Out.WriteLineAsync("Started sending file");
 
+            await SendLong(client, length);
+
             byte[] buffer = new byte[1024];
             int pos = 0;
             while (pos < length)
@@ -74,8 +76,10 @@ namespace TCPLib
             return System.Text.Encoding.UTF8.GetString(string_buffer);
         }
 
-        public static async Task ReceiveFile(TcpClient client, Stream file, long length)
+        public static async Task ReceiveFile(TcpClient client, Stream file)
         {
+            long length = await ReceiveLong(client);
+
             await Console.Out.WriteLineAsync("Started receiving file");
             int pos = 0;
             byte[] buffer = new byte[1024];
