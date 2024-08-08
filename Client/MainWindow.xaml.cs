@@ -40,7 +40,6 @@ namespace Client {
             Visibility = Visibility.Visible;
             if (login is not null && login != window) login.Close();
             else if (register is not null && register != window) register.Close();
-            Server.Dispose();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {

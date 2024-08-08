@@ -1,4 +1,6 @@
-﻿using HostingLib.Data.Entities;
+﻿using HostingLib.Classes;
+using HostingLib.Controllers;
+using HostingLib.Data.Entities;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -41,7 +43,7 @@ namespace Client {
 
             IReadOnlyList<File> files = Model.Files.Where(File => File.IsSelected).Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {
-                await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.Client, whereto, file, Model.User));
+                await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.Client, System.IO.Path.Combine(whereto, file.Name), file, Model.User));
             }
 
             await Model.Update();

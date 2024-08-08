@@ -23,7 +23,7 @@ namespace Client
         public FileModel(File file) {
             File = file;
             IsSelected = false;
-            FileName = System.IO.Path.GetFileNameWithoutExtension(File.Path);
+            FileName = System.IO.Path.GetFileName(File.Path);
 
             if (File.Path.EndsWith("\\")) {
                 Extension = "";
