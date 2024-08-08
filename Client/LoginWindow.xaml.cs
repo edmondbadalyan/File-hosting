@@ -49,12 +49,13 @@ namespace Client {
         private async void Button_Login(object sender, RoutedEventArgs e) {
             if (!CheckEmail() || !CheckPassword()) return;
 
-            User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, Model.Email, PasswordBox.Password));
-
+            User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, Model.Email));
             if (user is null) {
                 MessageBox.Show("Incorrect data");
                 return;
             }
+            await Task.Run(async () => await ClientCommands.AuthenticateUserAsync(mainWindow.Server, user, PasswordBox.Password));
+
 
             MainMenuWindow window = new MainMenuWindow(mainWindow, new(user));
             this.Visibility = Visibility.Hidden;
