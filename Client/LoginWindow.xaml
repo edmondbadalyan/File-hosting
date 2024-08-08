@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="LoginWindow" Height="300" Width="350">
+        Title="Войти" Height="300" Width="350">
     <StackPanel>
         <TextBlock Margin="10">Электронная почта:</TextBlock>
         <TextBox Margin="10" Text="{Binding Email}"></TextBox>

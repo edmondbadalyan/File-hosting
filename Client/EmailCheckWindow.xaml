@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="EmailCheckWindow" Height="300" Width="350">
+        Title="Подтвердите почту" Height="300" Width="350">
     <StackPanel>
         <TextBlock Margin="10">Электронная почта:</TextBlock>
         <TextBlock Margin="10" Text="{Binding Email}"></TextBlock>

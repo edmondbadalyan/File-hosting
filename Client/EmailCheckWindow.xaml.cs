@@ -13,6 +13,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using ClientCommands = HostingLib.Сlient.Client;
+using HostingLib.Data.Entities;
 
 namespace Client
 {
@@ -72,7 +74,7 @@ namespace Client
                     window.ShowDialog();
                 }
                 else if (Model.IsFromRegistration) {
-                    // пускаем в приложение
+                    mainWindow.GoBack(this);
                 }
             }
             else {
@@ -80,9 +82,13 @@ namespace Client
             }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             if (Model.IsFromRegistration && Model.Code != Model.CodeInput) {
-                // удаляем из бд данные об этом пользователе
+                User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, Model.Email, null));
+
+                if (user is not null) {
+                    await Task.Run(async () => { await ClientCommands.DeleteUserAsync(mainWindow.Server, user); });
+                }
             }
             mainWindow.GoBack(this);
         }

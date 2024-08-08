@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="RegisterWindow" Height="300" Width="350">
+        Title="Регистрация" Height="300" Width="350">
     <StackPanel>
         <TextBlock Margin="10">Электронная почта:</TextBlock>
         <TextBox Margin="10" Text="{Binding Email}"></TextBox>
