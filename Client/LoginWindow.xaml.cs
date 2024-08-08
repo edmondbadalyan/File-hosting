@@ -57,7 +57,7 @@ namespace Client {
             await Task.Run(async () => await ClientCommands.AuthenticateUserAsync(mainWindow.Server, user, PasswordBox.Password));
 
 
-            MainMenuWindow window = new MainMenuWindow(mainWindow, new(user));
+            MainMenuWindow window = new MainMenuWindow(mainWindow, new(user, mainWindow.Server));
             this.Visibility = Visibility.Hidden;
             window.ShowDialog();
         }

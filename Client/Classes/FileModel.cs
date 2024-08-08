@@ -11,6 +11,7 @@ namespace Client
     public class FileModel : BindableBase
     {
         public File File { get; set; }
+        public string FileName { get; set; }
         public string Extension { get; set; }
 
         public bool isSelected;
@@ -22,6 +23,7 @@ namespace Client
         public FileModel(File file) {
             File = file;
             IsSelected = false;
+            FileName = System.IO.Path.GetFileNameWithoutExtension(File.Path);
 
             if (File.Path.EndsWith("\\")) {
                 Extension = "";

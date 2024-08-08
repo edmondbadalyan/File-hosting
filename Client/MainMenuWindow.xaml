@@ -32,7 +32,7 @@
                         <DockPanel Margin="10 5">
                             <Image x:Name="image" DockPanel.Dock="Left"
                                    Stretch="UniformToFill" Source="file.png"/>
-                            <CheckBox x:Name="checkbox" IsChecked="{Binding Selected}"
+                            <CheckBox x:Name="checkbox" IsChecked="{Binding IsSelected}"
                                       DockPanel.Dock="Right"></CheckBox>
                             <TextBlock Text="{Binding FileName}"></TextBlock>
                         </DockPanel>

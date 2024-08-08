@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using HostingLib.Data.Entities;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
     /// <summary>
@@ -36,17 +38,26 @@ namespace Client {
             if (folderDialog.ShowDialog() == true) {
                 whereto = folderDialog.FolderName;
             }
-            // вызов загрузки для выбранных файлов
+
+            IReadOnlyList<File> files = Model.Files.Where(File => File.IsSelected).Select(FileModel => FileModel.File).ToArray();
+            foreach (File file in files) {
+                await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.Client, whereto, file, Model.User));
+            }
+
             await Model.Update();
         }
 
         private async void Button_Upload(object sender, RoutedEventArgs e) {
-            List<string> wherefrom;
+            List<string> wherefrom = new List<string>();
             OpenFileDialog fileDialog = new OpenFileDialog();
             if (fileDialog.ShowDialog() == true) {
                 wherefrom = fileDialog.FileNames.ToList();
             }
-            // вызов отправки для выбранных файлов
+
+            foreach (string file in wherefrom) {
+                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User));
+            }
+
             await Model.Update();
         }
 
