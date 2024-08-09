@@ -69,7 +69,12 @@ namespace Client {
         }
 
         private async void Button_Delete(object sender, RoutedEventArgs e) {
-            // здесь будет запрос на "удаление" всех выделенных файлов
+            IReadOnlyList<File> files = Model.Files.Where(File => File.IsSelected).Select(FileModel => FileModel.File).ToArray();
+            foreach (File file in files) {
+                await Task.Run(async () => await ClientCommands.DeleteFileAsync(Model.Client, file));
+            }
+
+            await Model.Update();
         }
 
         private async void Button_DeletedFiles(object sender, RoutedEventArgs e) {
