@@ -96,36 +96,6 @@ namespace HostingLib.Сlient
 
         #region File
 
-        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user)
-        {
-            var (key, iv) = EncryptionController.GenerateKeyAndIv();
-            EncryptionController encryption_controller = new(key, iv);
-
-            ClientEncryptionHelper encryption_helper = new(server, key, iv);
-
-            FilePayload payload = new(null, null, user.Id);
-            Request request = new(Requests.FILE_GETALL, Payloads.FILE, JsonConvert.SerializeObject(payload));
-
-            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
-
-            return JsonConvert.DeserializeObject<IList<Data.Entities.File>>(response.Payload);
-        }
-
-        public static async Task<HostingLib.Data.Entities.File> GetFileAsync(TcpClient server, HostingLib.Data.Entities.File file, User user)
-        {
-            var (key, iv) = EncryptionController.GenerateKeyAndIv();
-            EncryptionController encryption_controller = new(key, iv);
-
-            ClientEncryptionHelper encryption_helper = new(server, key, iv);
-
-            FilePayload payload = new(JsonConvert.SerializeObject(file), null, user.Id);
-            Request request = new(Requests.FILE_GET, Payloads.FILE, JsonConvert.SerializeObject(payload));
-
-            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
-
-            return JsonConvert.DeserializeObject<HostingLib.Data.Entities.File>(response.Payload);
-        }
-
         public static async Task UploadFileAsync(TcpClient server, string from_file_path, User user)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
@@ -169,6 +139,51 @@ namespace HostingLib.Сlient
             response = await ResponseController.ReceiveResponseAsync(server);
             Console.WriteLine(response.Payload);
 
+        }
+
+        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FilePayload payload = new(null, null, user.Id);
+            Request request = new(Requests.FILE_GETALL, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            return JsonConvert.DeserializeObject<IList<Data.Entities.File>>(response.Payload);
+        }
+
+        public static async Task<HostingLib.Data.Entities.File> GetFileAsync(TcpClient server, HostingLib.Data.Entities.File file, User user)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FilePayload payload = new(JsonConvert.SerializeObject(file), null, user.Id);
+            Request request = new(Requests.FILE_GET, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            return JsonConvert.DeserializeObject<HostingLib.Data.Entities.File>(response.Payload);
+        }
+
+        public static async Task DeleteFileAsync(TcpClient server, HostingLib.Data.Entities.File file)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FilePayload payload = new(JsonConvert.SerializeObject(file), null, 0);
+            Request request = new(Requests.FILE_DELETE, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            Console.WriteLine(response.Payload);
         }
 
         #endregion
