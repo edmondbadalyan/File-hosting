@@ -140,14 +140,14 @@ namespace HostingLib.Сlient
 
         }
 
-        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user, Data.Entities.File parent)
+        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user, int parent_id = -1)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
 
             ClientEncryptionHelper encryption_helper = new(server, key, iv);
 
-            FilePayload payload = new(null, null, user.Id, parent.Id);
+            FilePayload payload = new(null, null, user.Id, parent_id);
             Request request = new(Requests.FILE_GETALL, Payloads.FILE, JsonConvert.SerializeObject(payload));
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
