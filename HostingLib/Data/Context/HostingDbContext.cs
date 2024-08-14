@@ -35,6 +35,12 @@ namespace HostingLib.Data.Context
                 .HasMany(u => u.Files)
                 .WithOne(f => f.User)
                 .HasForeignKey(f => f.UserId);
+
+            modelBuilder.Entity<HostingLib.Data.Entities.File>()
+                .HasMany(f => f.Children)
+                .WithOne(f => f.Parent)
+                .HasForeignKey(f => f.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

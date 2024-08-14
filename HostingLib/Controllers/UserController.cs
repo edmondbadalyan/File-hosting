@@ -43,6 +43,7 @@ namespace HostingLib.Controllers
 
                 string user_directory = Path.Combine(FileController.storage_path, user.Id.ToString());
                 Directory.CreateDirectory(user_directory);
+                Directory.CreateDirectory(Path.Combine(user_directory, "Deleted"));
 
                 Console.WriteLine($"User created successfully with email: {email} and password: {password} (encrypted - {user.Password}");
             }

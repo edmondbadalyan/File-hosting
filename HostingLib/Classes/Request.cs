@@ -28,12 +28,33 @@ namespace HostingLib.Classes
         public string? File { get; set; }
         public string? FileDetails { get; set; }
         public int UserId { get; set; }
+        public int ParentId {  get; set; }
 
-        public FilePayload(string file, string fileInfo, int userId)
+        public FilePayload(string file, string fileInfo, int userId, int parentId)
         {
             File = file;
             FileDetails = fileInfo;
             UserId = userId;
+            ParentId = parentId;
+        }
+    }
+
+    public class FolderPayload
+    {
+        public Payloads Type = Payloads.FOLDER;
+        public string? Folder { get; set; }
+        public string? FolderName { get; set; }
+        public string? FolderPath { get; set; }
+        public int UserId { get; set; }
+        public int ParentId { get; set; }
+
+        public FolderPayload(string folder, string folderName, string folderPath, int userId, int parentId)
+        {
+            Folder = folder;
+            FolderName = folderName;
+            FolderPath = folderPath;
+            UserId = userId;
+            ParentId = parentId;
         }
     }
 
@@ -70,11 +91,13 @@ namespace HostingLib.Classes
     {
         GET_PUBLIC_KEY,
         ENCRYPTED_DATA,
+
         USER_CREATE,
         USER_GET,
         USER_AUTHENTICATE,
         USER_UPDATE,
         USER_DELETE,
+
         FILE_UPLOAD,
         FILE_DOWNLOAD,
         FILE_CREATE,
@@ -82,6 +105,11 @@ namespace HostingLib.Classes
         FILE_GETALL,
         FILE_DELETE,
         FILE_MOVE,
+
+        FOLDER_CREATE,
+        FOLDER_MOVE,
+        FOLDER_DELETE,
+        FOLDER_ERASE,
     }
 
     public enum Payloads
@@ -89,6 +117,7 @@ namespace HostingLib.Classes
         DATA,
         USER,
         FILE,
+        FOLDER,
         MESSAGE,
         PUBLIC_KEY
     }
