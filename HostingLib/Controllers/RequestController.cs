@@ -22,16 +22,23 @@ namespace HostingLib.Controllers
         {
             { Requests.GET_PUBLIC_KEY, new GetPublicKeyHandler() },
             { Requests.ENCRYPTED_DATA, new EncryptedDataHandler() },
+            
             { Requests.USER_CREATE, new CreateUserHandler() },
             { Requests.USER_GET, new GetUserHandler() },
             { Requests.USER_AUTHENTICATE, new AuthenticateUserHandler() },
             { Requests.USER_UPDATE, new UpdateUserHandler() },
             { Requests.USER_DELETE, new DeleteUserHandler() },
+
             { Requests.FILE_UPLOAD, new UploadFileHandler() },
             { Requests.FILE_DOWNLOAD, new DownloadFileHandler() },
             { Requests.FILE_GETALL, new GetAllFilesHandler() },
             { Requests.FILE_GET, new GetFileHandler() },
             { Requests.FILE_DELETE, new DeleteFileHandler() },
+
+            { Requests.FOLDER_CREATE, new CreateFolderHandler() },
+            { Requests.FOLDER_MOVE, new MoveFolderHandler() },
+            { Requests.FOLDER_DELETE, new DeleteFolderHandler() },
+            { Requests.FOLDER_ERASE, new EraseFolderHandler() },
         };
 
         public static async Task HandleClientAsync(TcpClient client)

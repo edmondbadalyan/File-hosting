@@ -18,12 +18,20 @@ namespace HostingLib.Data.Entities
         [Required]
         public int UserId { get; set; }
         public User User { get; set; }
+        [Required]
+        public bool IsDirectory { get; set; }
+        [Required]
+        public int ParentId { get; set; }
+        public File Parent { get; set; }
+        public ICollection<File> Children { get; set; }
 
-        public File(string name, string path, int userId)
+        public File(string name, string path, int userId, int parentId, bool isDirectory = false)
         {
             Name = name;
             Path = path;
             UserId = userId;
+            ParentId = parentId;
+            IsDirectory = isDirectory;
         }
     }
 }

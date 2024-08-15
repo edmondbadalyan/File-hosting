@@ -95,7 +95,7 @@ namespace HostingLib.Сlient
 
         #region File
 
-        public static async Task UploadFileAsync(TcpClient server, string from_file_path, User user)
+        public static async Task UploadFileAsync(TcpClient server, string from_file_path, User user, Data.Entities.File parent)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
@@ -104,7 +104,7 @@ namespace HostingLib.Сlient
 
             FileInfo info = new(from_file_path);
             FileDetails details = new(info.Name, info.Length, info.Extension, info.CreationTime);
-            FilePayload payload = new(null, JsonConvert.SerializeObject(details), user.Id);
+            FilePayload payload = new(null, JsonConvert.SerializeObject(details), user.Id, parent.Id);
             Request request = new(Requests.FILE_UPLOAD, Payloads.FILE, JsonConvert.SerializeObject(payload));
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
@@ -125,7 +125,7 @@ namespace HostingLib.Сlient
 
             ClientEncryptionHelper encryption_helper = new(server, key, iv);
 
-            FilePayload payload = new(JsonConvert.SerializeObject(file), null, user.Id);
+            FilePayload payload = new(JsonConvert.SerializeObject(file), null, user.Id, 0);
             Request request = new(Requests.FILE_DOWNLOAD, Payloads.FILE, JsonConvert.SerializeObject(payload));
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
@@ -140,14 +140,14 @@ namespace HostingLib.Сlient
 
         }
 
-        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user)
+        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user, int parent_id = -1)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
 
             ClientEncryptionHelper encryption_helper = new(server, key, iv);
 
-            FilePayload payload = new(null, null, user.Id);
+            FilePayload payload = new(null, null, user.Id, parent_id);
             Request request = new(Requests.FILE_GETALL, Payloads.FILE, JsonConvert.SerializeObject(payload));
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
@@ -162,7 +162,7 @@ namespace HostingLib.Сlient
 
             ClientEncryptionHelper encryption_helper = new(server, key, iv);
 
-            FilePayload payload = new(JsonConvert.SerializeObject(file), null, user.Id);
+            FilePayload payload = new(JsonConvert.SerializeObject(file), null, user.Id, 0);
             Request request = new(Requests.FILE_GET, Payloads.FILE, JsonConvert.SerializeObject(payload));
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
@@ -177,8 +177,72 @@ namespace HostingLib.Сlient
 
             ClientEncryptionHelper encryption_helper = new(server, key, iv);
 
-            FilePayload payload = new(JsonConvert.SerializeObject(file), null, 0);
+            FilePayload payload = new(JsonConvert.SerializeObject(file), null, 0, 0);
             Request request = new(Requests.FILE_DELETE, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            Console.WriteLine(response.Payload);
+        }
+
+        #endregion
+
+        #region Folder 
+
+        public static async Task CreateFolderAsync(TcpClient server, string folder_name, int user_id, int parent_id = -1)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FolderPayload payload = new(null, folder_name, null, user_id, parent_id);
+            Request request = new(Requests.FOLDER_CREATE, Payloads.FOLDER, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            Console.WriteLine(response.Payload);
+        }
+
+        public static async Task MoveFolderAsync(TcpClient server, Data.Entities.File folder, Data.Entities.File folder_to)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FolderPayload payload = new(JsonConvert.SerializeObject(folder), null, folder_to.Path, 0, 0);
+            Request request = new(Requests.FOLDER_MOVE, Payloads.FOLDER, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            Console.WriteLine(response.Payload);
+        }
+
+        public static async Task DeleteFolderAsync(TcpClient server, Data.Entities.File folder)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FolderPayload payload = new(JsonConvert.SerializeObject(folder), null, null, 0, 0);
+            Request request = new(Requests.FOLDER_DELETE, Payloads.FOLDER, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            Console.WriteLine(response.Payload);
+        }
+
+        public static async Task EraseFolderAsync(TcpClient server, Data.Entities.File folder)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FolderPayload payload = new(JsonConvert.SerializeObject(folder), null, null, 0, 0);
+            Request request = new(Requests.FOLDER_ERASE, Payloads.FOLDER, JsonConvert.SerializeObject(payload));
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
 
