@@ -12,18 +12,16 @@ namespace Client
     {
         public File File { get; set; }
         public string FileName { get; set; }
+        public DateTime LastChangeDate { get; set; }
+        public string Weight { get; set; }
         public string Extension { get; set; }
-
-        public bool isSelected;
-        public bool IsSelected {
-            get => isSelected;
-            set => SetProperty(ref isSelected, value);
-        }
 
         public FileModel(File file) {
             File = file;
-            IsSelected = false;
             FileName = System.IO.Path.GetFileName(File.Path);
+
+            LastChangeDate = DateTime.Now; // File.LastChangeDate;
+            Weight = ""; // File.Weight
 
             if (File.Path.EndsWith("\\")) {
                 Extension = "";

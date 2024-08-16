@@ -20,17 +20,24 @@ namespace Client {
             set => SetProperty(ref files, value);
         }
 
-        private string folderPath;
-        public string FolderPath {
-            get => folderPath;
-            set => SetProperty(ref folderPath, value);
+        private string search;
+        public string Search {
+            get => search;
+            set => SetProperty(ref search, value);
         }
 
-        public MainMenuWindowModel(User user, TcpClient client, List<FileModel> files, string folderPath) {
+        private FileModel selectedFolder;
+        public FileModel SelectedFolder {
+            get => selectedFolder;
+            set => SetProperty(ref selectedFolder, value);
+        }
+
+        public MainMenuWindowModel(User user, TcpClient client, List<FileModel> files, string search, FileModel selectedFolder) {
             User = user;
             Client = client;
             Files = files;
-            FolderPath = folderPath;
+            Search = search;
+            SelectedFolder = selectedFolder;
         }
 
         public MainMenuWindowModel(User user, TcpClient client) {
@@ -38,11 +45,12 @@ namespace Client {
             Client = client;
             Files = new List<FileModel>();
             Task.Run(() => Update());
-            FolderPath = "";
+            Search = "";
+            SelectedFolder = null;
         }
 
         public async Task Update() {
-            Files = (await Task.Run(async () => await ClientCommands.GetAllFilesAsync(Client, User))).Select((File) => new FileModel(File)).ToList();
+            Files = (await Task.Run(async () => await ClientCommands.GetAllFilesAsync(Client, User, (SelectedFolder.File.Id == null ? -1 : SelectedFolder.File.Id) ))).Select((File) => new FileModel(File)).ToList();
         }
     }
 }

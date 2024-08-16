@@ -12,7 +12,8 @@
         <DockPanel DockPanel.Dock="Left">
             <Button DockPanel.Dock="Top"
                     Padding="0"
-                    Margin="10 30">Выйти</Button>
+                    Margin="10 30" FontSize="30"
+                    Click="Button_Exit">Выйти</Button>
             <StackPanel Margin="10 10">
                 <Button Margin="0 5" Click="Button_Download">Скачать</Button>
                 <Button Margin="0 5" Click="Button_Upload">Загрузить</Button>
@@ -20,38 +21,47 @@
                 <Button Margin="0 5" Click="Button_Delete">Удалить</Button>
                 <Button Margin="0 5" Click="Button_DeletedFiles">Удалённые файлы</Button>
                 <Button Margin="0 5" Click="Button_Settings">Настройки</Button>
+                <Button Margin="0 30" FontSize="30" Click="Button_Open">Открыть</Button>
             </StackPanel>
         </DockPanel>
         <DockPanel>
-            <TextBox DockPanel.Dock="Top"
-                     Margin="10 30"></TextBox>
-            
-            <ItemsControl ItemsSource="{Binding Files}" Margin="10">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <DockPanel Margin="10 5">
-                            <Image x:Name="image" DockPanel.Dock="Left"
-                                   Stretch="UniformToFill" Source="file.png"/>
-                            <CheckBox x:Name="checkbox" IsChecked="{Binding IsSelected}"
-                                      DockPanel.Dock="Right"></CheckBox>
-                            <TextBlock Text="{Binding FileName}"></TextBlock>
-                        </DockPanel>
+            <GroupBox DockPanel.Dock="Top" Header="Поиск по пути">
+                <DockPanel>
+                    <Button Margin="10 30" DockPanel.Dock="Right"
+                            Click="Button_Search">Найти</Button>
+                    <TextBox Margin="10 30" Text="{Binding Search}"></TextBox>
+                </DockPanel>
+            </GroupBox>
 
-                        <DataTemplate.Triggers>
-                            <!--<DataTrigger Binding="{Binding IsShipHere}" Value="True">
-                                <Setter Property="Image.Source" Value="ship.png" TargetName="image"/>
-                            </DataTrigger>-->
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
+            <DataGrid ItemsSource="{Binding Files}" Margin="10"
+                      AutoGenerateColumns="False" CanUserAddRows="False"
+                      CanUserDeleteRows="False" x:Name="dg">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Файл">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="10 5" Orientation="Horizontal">
+                                    <Image x:Name="image" DockPanel.Dock="Left"
+                                           Stretch="UniformToFill" Source="file.png"/>
+                                    <TextBlock Text="{Binding FileName}"></TextBlock>
+                                </StackPanel>
 
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel CanVerticallyScroll="True"></StackPanel>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
-            
+                                <DataTemplate.Triggers>
+                                    <!--<DataTrigger Binding="{Binding IsShipHere}" Value="True">
+                                        <Setter Property="Image.Source" Value="ship.png" TargetName="image"/>
+                                    </DataTrigger>-->
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Дата последних изменений"
+                                Binding="{Binding LastChangeDate}"></DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Вес файла"
+                                Binding="{Binding Weight}"></DataGridTextColumn>
+                </DataGrid.Columns> 
+            </DataGrid>
         </DockPanel>
     </DockPanel>
 </Window>
