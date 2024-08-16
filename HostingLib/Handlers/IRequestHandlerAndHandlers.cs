@@ -319,8 +319,7 @@ namespace HostingLib.Handlers
             try
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
-                Data.Entities.File file_info = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
-                Data.Entities.File file = await FileController.GetFile(file_info.Name, payload.UserId);
+                Data.Entities.File file = await FileController.GetFile(payload.FileName, payload.UserId);
 
                 return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(file));
             }

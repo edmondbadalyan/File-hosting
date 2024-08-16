@@ -155,14 +155,14 @@ namespace HostingLib.Сlient
             return JsonConvert.DeserializeObject<IList<Data.Entities.File>>(response.Payload);
         }
 
-        public static async Task<HostingLib.Data.Entities.File> GetFileAsync(TcpClient server, HostingLib.Data.Entities.File file, User user)
+        public static async Task<HostingLib.Data.Entities.File> GetFileAsync(TcpClient server, string path, User user)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
 
             ClientEncryptionHelper encryption_helper = new(server, key, iv);
 
-            FilePayload payload = new(JsonConvert.SerializeObject(file), null, null, user.Id, 0);
+            FilePayload payload = new(null, path, null, user.Id, 0);
             Request request = new(Requests.FILE_GET, Payloads.FILE, JsonConvert.SerializeObject(payload));
 
             Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
