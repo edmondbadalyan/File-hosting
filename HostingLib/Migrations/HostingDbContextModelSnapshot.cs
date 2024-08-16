@@ -47,8 +47,8 @@ namespace HostingLib.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("Size")
-                        .HasColumnType("float");
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
