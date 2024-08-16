@@ -69,23 +69,23 @@ namespace HostingLib.Controllers
             return files;
         }
 
-        public static async Task<HostingLib.Data.Entities.File> GetFile(string file_name, int user_id)
+        public static async Task<HostingLib.Data.Entities.File> GetFile(string file_path, int user_id)
         {
             HostingDbContext context = new();
 
             HostingLib.Data.Entities.File file = await context.Files
-                .Where(f => f.Name == file_name && f.UserId == user_id)
+                .Where(f => f.Path == file_path && f.UserId == user_id)
                 .SingleOrDefaultAsync();
 
             await context.DisposeAsync();
 
             if(file is null)
             {
-                Console.WriteLine($"Get request with data: {file_name} {user_id}, returned null - no such file belonging to user");
+                Console.WriteLine($"Get request with data: {file_path} {user_id}, returned null - no such file belonging to user");
             }
             else
             {
-                Console.WriteLine($"Get request with data: {file_name} {user_id}, returned file {file.Name} {file.Path}");
+                Console.WriteLine($"Get request with data: {file_path} {user_id}, returned file {file.Name} {file.Path}");
             }
 
             return file;
