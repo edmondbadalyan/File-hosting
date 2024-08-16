@@ -40,7 +40,7 @@ namespace HostingLib.Controllers
             HostingDbContext context = new();
 
             string file_path = Path.Combine(storage_path, user_id.ToString(), info.Name);
-            HostingLib.Data.Entities.File file = new(info.Name, file_path, user_id, parent_id);
+            HostingLib.Data.Entities.File file = new(info.Name, file_path, info.Length, info.LastWriteTime, user_id, parent_id);
 
             context.Files
                 .Add(file);
@@ -91,11 +91,11 @@ namespace HostingLib.Controllers
             return file;
         }
 
-        public static async Task MoveFile(HostingLib.Data.Entities.File file, HostingLib.Data.Entities.File folder_to)
+        public static async Task MoveFile(HostingLib.Data.Entities.File file, string folder_to)
         {
             HostingDbContext context = new();
 
-            string new_path = Path.Combine(folder_to.Path, file.Name);
+            string new_path = Path.Combine(folder_to, file.Name);
             file.Path = new_path;
             System.IO.File.Move(file.Path, new_path);
 
@@ -105,10 +105,27 @@ namespace HostingLib.Controllers
             await context.SaveChangesAsync();
             await context.DisposeAsync();
 
-            Console.WriteLine($"File {file.Id} {file.Name} move to {new_path}");
+            Console.WriteLine($"File {file.Id} {file.Name} moved to {new_path}");
         }
 
         public static async Task DeleteFile(HostingLib.Data.Entities.File file)
+        {
+            HostingDbContext context = new();
+
+            string new_path = Path.Combine(storage_path, "Deleted", file.Name);
+            Directory.Move(file.Path, new_path);
+            file.Path = new_path;
+
+            context.Files
+                .Update(file);
+
+            await context.SaveChangesAsync();
+            await context.DisposeAsync();
+
+            Console.WriteLine($"File {file.Id} {file.Name} moved to deleted successfully!");
+        }
+
+        public static async Task EraseFile(HostingLib.Data.Entities.File file)
         {
             HostingDbContext context = new();
 
@@ -120,7 +137,7 @@ namespace HostingLib.Controllers
 
             System.IO.File.Delete(file.Path);
 
-            Console.WriteLine($"File {file.Id} {file.Name} deleted successfully!");
+            Console.WriteLine($"File {file.Id} {file.Name} erased successfully!");
         }
 
         #endregion
@@ -137,13 +154,23 @@ namespace HostingLib.Controllers
 
             Directory.CreateDirectory(folder_path);
 
-            Data.Entities.File folder = new(folder_name, folder_path, user_id, parent_id);
+            Data.Entities.File folder = new(folder_name, folder_path, 0, DateTime.Now, user_id, parent_id, true);
             context.Files
                 .Add(folder);
             await context.SaveChangesAsync();
             await context.DisposeAsync();
 
             Console.WriteLine($"Added folder successfully with name {folder_name}, belonging to {user_id}");
+        }
+
+        public static async Task<Data.Entities.File> GetFolder(string folder_name)
+        {
+            HostingDbContext context = new();
+
+            return await context.Files
+                .Where(f => f.IsDirectory && f.Name == folder_name)
+                .SingleOrDefaultAsync();
+                
         }
 
         public static async Task MoveFolder(Data.Entities.File folder, string folder_to)

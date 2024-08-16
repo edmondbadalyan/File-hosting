@@ -26,14 +26,16 @@ namespace HostingLib.Classes
     {
         public Payloads Type = Payloads.FILE;
         public string? File { get; set; }
+        public string? FileName { get; set; }
         public string? FileDetails { get; set; }
         public int UserId { get; set; }
         public int ParentId {  get; set; }
 
-        public FilePayload(string file, string fileInfo, int userId, int parentId)
+        public FilePayload(string file, string fileName, string fileDetails, int userId, int parentId)
         {
             File = file;
-            FileDetails = fileInfo;
+            FileName = fileName;
+            FileDetails = fileDetails;
             UserId = userId;
             ParentId = parentId;
         }
@@ -104,9 +106,11 @@ namespace HostingLib.Classes
         FILE_GET,
         FILE_GETALL,
         FILE_DELETE,
+        FILE_ERASE,
         FILE_MOVE,
 
         FOLDER_CREATE,
+        FOLDER_GET,
         FOLDER_MOVE,
         FOLDER_DELETE,
         FOLDER_ERASE,

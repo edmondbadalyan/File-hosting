@@ -12,13 +12,15 @@ namespace HostingLib.Classes
         public long Length { get; set; }
         public string Extension { get; set; }
         public DateTime CreationTime { get; set; }
+        public DateTime LastWriteTime { get; set; }
 
-        public FileDetails(string name, long length, string extension, DateTime creationTime)
+        public FileDetails(string name, long length, string extension, DateTime creationTime, DateTime lastWriteTime)
         {
             Name = name;
             Length = length;
             Extension = extension;
             CreationTime = creationTime;
+            LastWriteTime = lastWriteTime;
         }
 
         public FileDetails()

@@ -79,7 +79,7 @@ namespace HostingLib.Handlers
                         }
                     case Payloads.FILE:
                         {
-                            string file = null;
+                            string file = null, file_name = null;
                             string file_info = null;
                             int user_id = 0, parent_id = 0;
 
@@ -90,6 +90,11 @@ namespace HostingLib.Handlers
                                 file = appended_request_payload.File;
                             }
 
+                            if (appended_request_payload.FileName  != null)
+                            {
+                                file_name = appended_request_payload.FileName;
+                            }
+
                             if (appended_request_payload.FileDetails != null)
                             {
                                 file_info = appended_request_payload.FileDetails;
@@ -98,7 +103,7 @@ namespace HostingLib.Handlers
                             user_id = appended_request_payload.UserId;
                             parent_id = appended_request_payload.ParentId;
 
-                            appended_request_payload = new FilePayload(file, file_info, user_id, parent_id);
+                            appended_request_payload = new FilePayload(file, file_name, file_info, user_id, parent_id);
 
                             string new_payload = JsonConvert.SerializeObject(appended_request_payload);
 
@@ -326,6 +331,25 @@ namespace HostingLib.Handlers
         }
     }
 
+    public class MoveFileHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+                Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
+                await FileController.MoveFile(file, payload.FileName);
+
+                return new(Responses.Success, Payloads.MESSAGE, "File moved successfully!");
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
     public class DeleteFileHandler : IRequestHandler<Response>
     {
         public async Task<Response> HandleAsync(ClientState state, Request request)
@@ -345,6 +369,26 @@ namespace HostingLib.Handlers
         }
     }
 
+    public class EraseFileHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+                Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
+                await FileController.EraseFile(file);
+
+                return new(Responses.Success, Payloads.MESSAGE, "File erased successfully!");
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+
     #endregion
 
     #region Folder
@@ -359,6 +403,24 @@ namespace HostingLib.Handlers
                 await FileController.CreateFolder(payload.FolderName, payload.UserId);
 
                 return new(Responses.Success, Payloads.MESSAGE, "Folder created successfully!");
+            }
+            catch (Exception ex)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+    public class GetFolderHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
+                Data.Entities.File folder = await FileController.GetFolder(payload.FolderName);
+
+                return new(Responses.Success, Payloads.FOLDER, JsonConvert.SerializeObject(folder));
             }
             catch (Exception ex)
             {
