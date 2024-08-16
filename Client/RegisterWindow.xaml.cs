@@ -26,7 +26,7 @@ namespace Client {
         }
 
         private async void Button_Send(object sender, RoutedEventArgs e) {
-            if (Validation.ValidateEmail(Model.Email) && Validation.ValidatePassword(PasswordBox)) {
+            if (Utilities.ValidateEmail(Model.Email) && Utilities.ValidatePassword(PasswordBox)) {
                 await Task.Run(async () => await ClientCommands.CreateUserAsync(mainWindow.Server, Model.Email, PasswordBox.Password));
 
                 EmailCheckWindow window = new EmailCheckWindow(mainWindow, this, new(Model.Email));

@@ -20,8 +20,8 @@ namespace Client
             File = file;
             FileName = System.IO.Path.GetFileName(File.Path);
 
-            LastChangeDate = DateTime.Now; // File.LastChangeDate;
-            Weight = ""; // File.Weight
+            LastChangeDate = File.ChangeDate;
+            Weight = Utilities.FormatBytes(File.Size);
 
             if (File.Path.EndsWith("\\")) {
                 Extension = "";

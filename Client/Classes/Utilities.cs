@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace Client
 {
-    public static class Validation
+    public static class Utilities
     {
         public static bool ValidateEmail(string email) {
             try {
@@ -60,6 +60,18 @@ namespace Client
             }
 
             return allowed;
+
+        }
+
+        public static string FormatBytes(long bytes) {
+            string[] Suffix = { "б", "Кб", "Мб", "Гб", "Тб" };
+            int i;
+            double dblSByte = bytes;
+            for (i = 0; i < Suffix.Length && bytes >= 1024; i++, bytes /= 1024) {
+                dblSByte = bytes / 1024.0;
+            }
+
+            return String.Format("{0:0.##} {1}", dblSByte, Suffix[i]);
         }
     }
 }
