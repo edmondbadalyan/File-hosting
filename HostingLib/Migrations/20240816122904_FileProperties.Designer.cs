@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HostingLib.Migrations
 {
     [DbContext(typeof(HostingDbContext))]
-    [Migration("20240816111745_FileProperties")]
+    [Migration("20240816122904_FileProperties")]
     partial class FileProperties
     {
         /// <inheritdoc />
@@ -50,8 +50,8 @@ namespace HostingLib.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("Size")
-                        .HasColumnType("float");
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");

@@ -16,7 +16,7 @@ namespace HostingLib.Data.Entities
         [Required]
         public string Path { get; set; }
         [Required]
-        public double Size { get; set; }
+        public long Size { get; set; }
         [Required]
         public DateTime ChangeDate { get; set; }
         [Required]
@@ -29,7 +29,7 @@ namespace HostingLib.Data.Entities
         public File Parent { get; set; }
         public ICollection<File> Children { get; set; }
 
-        public File(string name, string path, double size, DateTime changeDate, int userId, int parentId, bool isDirectory = false)
+        public File(string name, string path, long size, DateTime changeDate, int userId, int parentId, bool isDirectory = false)
         {
             Name = name;
             Path = path;

@@ -18,12 +18,12 @@ namespace HostingLib.Migrations
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
-            migrationBuilder.AddColumn<double>(
+            migrationBuilder.AddColumn<long>(
                 name: "Size",
                 table: "Files",
-                type: "float",
+                type: "bigint",
                 nullable: false,
-                defaultValue: 0.0);
+                defaultValue: 0L);
         }
 
         /// <inheritdoc />
