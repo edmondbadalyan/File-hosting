@@ -33,12 +33,15 @@ namespace HostingLib.Controllers
             { Requests.FILE_DOWNLOAD, new DownloadFileHandler() },
             { Requests.FILE_GETALL, new GetAllFilesHandler() },
             { Requests.FILE_GET, new GetFileHandler() },
+            { Requests.FILE_MOVE, new MoveFileHandler() },
             { Requests.FILE_DELETE, new DeleteFileHandler() },
+            { Requests.FILE_ERASE, new  EraseFileHandler()},
 
             { Requests.FOLDER_CREATE, new CreateFolderHandler() },
+            { Requests.FOLDER_GET, new GetFolderHandler() },
             { Requests.FOLDER_MOVE, new MoveFolderHandler() },
             { Requests.FOLDER_DELETE, new DeleteFolderHandler() },
-            { Requests.FOLDER_ERASE, new EraseFolderHandler() },
+            { Requests.FOLDER_ERASE, new EraseFileHandler() },
         };
 
         public static async Task HandleClientAsync(TcpClient client)
