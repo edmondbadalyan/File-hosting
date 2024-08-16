@@ -41,7 +41,7 @@ namespace Client {
                 whereto = folderDialog.FolderName;
             }
 
-            IReadOnlyList<File> files = Model.Files.Where(File => File.IsSelected).Select(FileModel => FileModel.File).ToArray();
+            IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {
                 await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.Client, System.IO.Path.Combine(whereto, file.Name), file, Model.User));
             }
@@ -57,19 +57,19 @@ namespace Client {
             }
 
             foreach (string file in wherefrom) {
-                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User));
+                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User, Model.SelectedFolder.File));
             }
 
             await Model.Update();
         }
 
         private void Button_Create(object sender, RoutedEventArgs e) {
-            CreateWindow window = new CreateWindow(mainWindow, new(Model.FolderPath));
+            CreateWindow window = new CreateWindow(mainWindow, new(Model.Search));
             window.ShowDialog();
         }
 
         private async void Button_Delete(object sender, RoutedEventArgs e) {
-            IReadOnlyList<File> files = Model.Files.Where(File => File.IsSelected).Select(FileModel => FileModel.File).ToArray();
+            IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {
                 await Task.Run(async () => await ClientCommands.DeleteFileAsync(Model.Client, file));
             }
@@ -84,6 +84,28 @@ namespace Client {
         private void Button_Settings(object sender, RoutedEventArgs e) {
             SettingsWindow window = new SettingsWindow(mainWindow);
             window.ShowDialog();
+        }
+
+        private void Button_Open(object sender, RoutedEventArgs e) {
+            if (dg.SelectedItems.Count == 1) {
+                FileModel file = dg.SelectedItems.Cast<FileModel>().First();
+                if (file.Extension == "") {
+                    Model.SelectedFolder = file;
+                }
+                else {
+                    // предпросмотр
+                }
+            }
+        }
+
+        private void Button_Exit(object sender, RoutedEventArgs e) => Close();
+
+        private void Button_Search(object sender, RoutedEventArgs e) {
+            if (Model.Search == "" || !System.IO.Path.Exists(Model.Search)) {
+                System.Windows.Forms.MessageBox.Show("Введите путь");
+                return;
+            }
+            // Model.SelectedFolder = ...; - А как нам получить его?
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => mainWindow.GoBack(this);
