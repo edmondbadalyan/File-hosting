@@ -100,12 +100,14 @@ namespace Client {
 
         private void Button_Exit(object sender, RoutedEventArgs e) => Close();
 
-        private void Button_Search(object sender, RoutedEventArgs e) {
+        private async void Button_Search(object sender, RoutedEventArgs e) {
             if (Model.Search == "" || !System.IO.Path.Exists(Model.Search)) {
                 System.Windows.Forms.MessageBox.Show("Введите путь");
                 return;
             }
-            // Model.SelectedFolder = ...; - А как нам получить его?
+
+            Model.SelectedFolder = new(await Task.Run(async () => await ClientCommands.GetFileAsync(Model.Client, Model.Search, Model.User)));
+            await Model.Update();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => mainWindow.GoBack(this);
