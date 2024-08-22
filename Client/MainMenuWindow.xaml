@@ -29,13 +29,14 @@
                 <DockPanel>
                     <Button Margin="10 30" DockPanel.Dock="Right"
                             Click="Button_Search">Найти</Button>
-                    <TextBox Margin="10 30" Text="{Binding Search}"></TextBox>
+                    <!--SelectedItem="{Binding Search}"-->
+                    <ComboBox ItemsSource="{Binding AllFilesString}" Margin="10 30" Text="{Binding Search}"></ComboBox>
                 </DockPanel>
             </GroupBox>
 
             <DataGrid ItemsSource="{Binding Files}" Margin="10"
                       AutoGenerateColumns="False" CanUserAddRows="False"
-                      CanUserDeleteRows="False" x:Name="dg">
+                      CanUserDeleteRows="False" x:Name="dg" IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Header="Файл">
                         <DataGridTemplateColumn.CellTemplate>

@@ -50,14 +50,16 @@ namespace Client {
         }
 
         private async void Button_Upload(object sender, RoutedEventArgs e) {
-            List<string> wherefrom = new List<string>();
+            List<string> fileNames = new List<string>();
             OpenFileDialog fileDialog = new OpenFileDialog();
             if (fileDialog.ShowDialog() == true) {
-                wherefrom = fileDialog.FileNames.ToList();
+                fileNames = fileDialog.FileNames.ToList();
             }
 
-            foreach (string file in wherefrom) {
-                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User, Model.SelectedFolder.File));
+            File? whereto = Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId);
+            if (whereto is null) return;
+            foreach (string file in fileNames) {
+                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User, whereto));
             }
 
             await Model.Update();
@@ -90,7 +92,7 @@ namespace Client {
             if (dg.SelectedItems.Count == 1) {
                 FileModel file = dg.SelectedItems.Cast<FileModel>().First();
                 if (file.Extension == "") {
-                    Model.SelectedFolder = file;
+                    Model.SelectedFolderId = file.File.Id;
                 }
                 else {
                     // предпросмотр
@@ -105,8 +107,12 @@ namespace Client {
                 System.Windows.Forms.MessageBox.Show("Введите путь");
                 return;
             }
-
-            Model.SelectedFolder = new(await Task.Run(async () => await ClientCommands.GetFileAsync(Model.Client, Model.Search, Model.User)));
+            File? file = Model.AllFiles.FirstOrDefault(File => File.Path == Model.Search);
+            if (file is null) {
+                System.Windows.Forms.MessageBox.Show("Некорректный путь");
+                return;
+            }
+            Model.SelectedFolderId = file.Id;
             await Model.Update();
         }
 
