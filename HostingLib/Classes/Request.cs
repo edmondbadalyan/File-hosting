@@ -105,6 +105,7 @@ namespace HostingLib.Classes
         FILE_CREATE,
         FILE_GET,
         FILE_GETALL,
+        FILE_GET_N,
         FILE_DELETE,
         FILE_ERASE,
         FILE_MOVE,

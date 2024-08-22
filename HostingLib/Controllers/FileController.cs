@@ -69,6 +69,24 @@ namespace HostingLib.Controllers
             return files;
         }
 
+        public static async Task<IList<HostingLib.Data.Entities.File>> GetFiles(int user_id, int parent_id)
+        {
+            HostingDbContext context = new();
+
+            IList<HostingLib.Data.Entities.File> files = await context.Files
+                .Where(f => f.UserId == user_id && f.ParentId == parent_id)
+                .ToListAsync();
+
+            await context.DisposeAsync();
+
+            foreach (Data.Entities.File file in files)
+            {
+                Console.WriteLine($"{file.Id} {file.Name}");
+            }
+
+            return files;
+        }
+
         public static async Task<HostingLib.Data.Entities.File> GetFile(string file_path, int user_id)
         {
             HostingDbContext context = new();
