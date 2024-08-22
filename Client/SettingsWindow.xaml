@@ -5,8 +5,60 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
-        Title="Настройки" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="Настройки" Height="300" Width="350">
+    <StackPanel>
+        <GroupBox Header="Выбрать тему">
+            <UniformGrid Rows="1">
+                <Button Content="Светлая" Margin="10" Click="Button_LightTheme">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="Foreground" Value="#00AACC"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="LightGray"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Width="100" Height="60" CornerRadius="25"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="DimGray" BorderThickness="2">
+                                <ContentPresenter VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                
+                <Button Content="Тёмная" Margin="10" Click="Button_DarkTheme">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="DimGray"/>
+                            <Setter Property="Foreground" Value="Aqua"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#505050"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Width="100" Height="60" CornerRadius="25"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="DarkSlateGray" BorderThickness="2">
+                                <ContentPresenter VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </UniformGrid>
+        </GroupBox>
+    </StackPanel>
 </Window>

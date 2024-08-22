@@ -28,10 +28,7 @@
             <Setter Property="Background" Value="DimGray"/>
         </Style>
 
-        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
-            <Setter Property="Foreground" Value="Aqua"/>
-            <Setter Property="Background" Value="DarkSlateGray"/>
-        </Style>
+        
         <Style TargetType="{x:Type Label}">
             <Setter Property="Foreground" Value="Aqua"/>
             <Setter Property="Opacity" Value="0.4"/>
@@ -75,6 +72,7 @@
             <Setter Property="Background" Value="DarkSlateGray"/>
             <Setter Property="FontSize" Value="20"/>
         </Style>
+        
         <Style TargetType="Window" BasedOn="{StaticResource {x:Type FrameworkElement}}">
             <Setter Property="Foreground" Value="Aqua"/>
             <Setter Property="Background" Value="DimGray"/>

@@ -18,11 +18,21 @@ namespace Client {
     /// </summary>
     public partial class SettingsWindow : Window {
         MainWindow mainWindow;
+        SettingsWindowModel Model { get; set; }
 
-        public SettingsWindow(MainWindow mainWindow) {
+        public SettingsWindow(MainWindow mainWindow, SettingsWindowModel model) {
             InitializeComponent();
             
             this.mainWindow = mainWindow;
+            this.Model = model;
+        }
+
+        private void Button_LightTheme(object sender, RoutedEventArgs e) {
+            Model.IsDark = false;
+        }
+
+        private void Button_DarkTheme(object sender, RoutedEventArgs e) {
+            Model.IsDark = true;
         }
     }
 }

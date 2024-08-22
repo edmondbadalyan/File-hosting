@@ -80,7 +80,7 @@ namespace Client {
         }
 
         private async void Button_DeletedFiles(object sender, RoutedEventArgs e) {
-            // здесь будет запрос на получение файлов из папки "удалённых"
+            //Model.Files = Model.AllFiles.Where(File => File.IsDeleted)
         }
 
         private void Button_Settings(object sender, RoutedEventArgs e) {
