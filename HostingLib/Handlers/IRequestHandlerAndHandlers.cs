@@ -312,6 +312,25 @@ namespace HostingLib.Handlers
         }
     }
 
+    public class GetFilesHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+
+                IList<Data.Entities.File> files = await FileController.GetFiles(payload.UserId, payload.ParentId);
+
+                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
     public class GetFileHandler : IRequestHandler<Response>
     {
         public async Task<Response> HandleAsync(ClientState state, Request request)

@@ -140,21 +140,6 @@ namespace HostingLib.Сlient
 
         }
 
-        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user, int parent_id = -1)
-        {
-            var (key, iv) = EncryptionController.GenerateKeyAndIv();
-            EncryptionController encryption_controller = new(key, iv);
-
-            ClientEncryptionHelper encryption_helper = new(server, key, iv);
-
-            FilePayload payload = new(null, null, null, user.Id, parent_id);
-            Request request = new(Requests.FILE_GETALL, Payloads.FILE, JsonConvert.SerializeObject(payload));
-
-            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
-
-            return JsonConvert.DeserializeObject<IList<Data.Entities.File>>(response.Payload);
-        }
-
         public static async Task<HostingLib.Data.Entities.File> GetFileAsync(TcpClient server, string path, User user)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
@@ -169,6 +154,37 @@ namespace HostingLib.Сlient
 
             return JsonConvert.DeserializeObject<HostingLib.Data.Entities.File>(response.Payload);
         }
+
+        public static async Task<IList<Data.Entities.File>> GetAllFilesAsync(TcpClient server, User user)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FilePayload payload = new(null, null, null, user.Id, 0);
+            Request request = new(Requests.FILE_GETALL, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            return JsonConvert.DeserializeObject<IList<Data.Entities.File>>(response.Payload);
+        }
+
+        public static async Task<IList<Data.Entities.File>> GetFilesAsync(TcpClient server, User user, int parent_id = -1)
+        {
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, key, iv);
+
+            FilePayload payload = new(null, null, null, user.Id, parent_id);
+            Request request = new(Requests.FILE_GET_N, Payloads.FILE, JsonConvert.SerializeObject(payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request);
+
+            return JsonConvert.DeserializeObject<IList<Data.Entities.File>>(response.Payload);
+        }
+
 
         public static async Task DeleteFileAsync(TcpClient server, HostingLib.Data.Entities.File file)
         {

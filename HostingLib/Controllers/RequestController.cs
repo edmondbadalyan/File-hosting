@@ -31,8 +31,9 @@ namespace HostingLib.Controllers
 
             { Requests.FILE_UPLOAD, new UploadFileHandler() },
             { Requests.FILE_DOWNLOAD, new DownloadFileHandler() },
-            { Requests.FILE_GETALL, new GetAllFilesHandler() },
             { Requests.FILE_GET, new GetFileHandler() },
+            { Requests.FILE_GETALL, new GetAllFilesHandler() },
+            { Requests.FILE_GET_N, new GetFilesHandler() },
             { Requests.FILE_MOVE, new MoveFileHandler() },
             { Requests.FILE_DELETE, new DeleteFileHandler() },
             { Requests.FILE_ERASE, new  EraseFileHandler()},
