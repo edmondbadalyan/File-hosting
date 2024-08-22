@@ -185,7 +185,6 @@ namespace HostingLib.Сlient
             return JsonConvert.DeserializeObject<IList<Data.Entities.File>>(response.Payload);
         }
 
-
         public static async Task DeleteFileAsync(TcpClient server, HostingLib.Data.Entities.File file)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();

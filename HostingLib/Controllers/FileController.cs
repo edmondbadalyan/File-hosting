@@ -51,6 +51,28 @@ namespace HostingLib.Controllers
             Console.WriteLine($"File {file.Name} created successfully with path {file.Path} belonging to {user_id}");
         }
 
+        public static async Task<HostingLib.Data.Entities.File> GetFile(string file_path, int user_id)
+        {
+            HostingDbContext context = new();
+
+            HostingLib.Data.Entities.File file = await context.Files
+                .Where(f => f.Path == file_path && f.UserId == user_id)
+                .SingleOrDefaultAsync();
+
+            await context.DisposeAsync();
+
+            if(file is null)
+            {
+                Console.WriteLine($"Get request with data: {file_path} {user_id}, returned null - no such file belonging to user");
+            }
+            else
+            {
+                Console.WriteLine($"Get request with data: {file_path} {user_id}, returned file {file.Name} {file.Path}");
+            }
+
+            return file;
+        }
+
         public static async Task<IList<HostingLib.Data.Entities.File>> GetAllFiles(int user_id)
         {
             HostingDbContext context = new();
@@ -87,28 +109,6 @@ namespace HostingLib.Controllers
             return files;
         }
 
-        public static async Task<HostingLib.Data.Entities.File> GetFile(string file_path, int user_id)
-        {
-            HostingDbContext context = new();
-
-            HostingLib.Data.Entities.File file = await context.Files
-                .Where(f => f.Path == file_path && f.UserId == user_id)
-                .SingleOrDefaultAsync();
-
-            await context.DisposeAsync();
-
-            if(file is null)
-            {
-                Console.WriteLine($"Get request with data: {file_path} {user_id}, returned null - no such file belonging to user");
-            }
-            else
-            {
-                Console.WriteLine($"Get request with data: {file_path} {user_id}, returned file {file.Name} {file.Path}");
-            }
-
-            return file;
-        }
-
         public static async Task MoveFile(HostingLib.Data.Entities.File file, string folder_to)
         {
             HostingDbContext context = new();
@@ -133,6 +133,8 @@ namespace HostingLib.Controllers
             string new_path = Path.Combine(storage_path, "Deleted", file.Name);
             Directory.Move(file.Path, new_path);
             file.Path = new_path;
+            file.IsDeleted = true;
+            file.ParentId = -2;
 
             context.Files
                 .Update(file);
@@ -172,7 +174,7 @@ namespace HostingLib.Controllers
 
             Directory.CreateDirectory(folder_path);
 
-            Data.Entities.File folder = new(folder_name, folder_path, 0, DateTime.Now, user_id, parent_id, true);
+            Data.Entities.File folder = new(folder_name, folder_path, 0, DateTime.Now, user_id, parent_id, false, true);
             context.Files
                 .Add(folder);
             await context.SaveChangesAsync();

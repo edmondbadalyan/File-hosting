@@ -293,6 +293,24 @@ namespace HostingLib.Handlers
         }
     }
 
+    public class GetFileHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+                Data.Entities.File file = await FileController.GetFile(payload.FileName, payload.UserId);
+
+                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(file));
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
     public class GetAllFilesHandler : IRequestHandler<Response>
     {
         public async Task<Response> HandleAsync(ClientState state, Request request)
@@ -323,24 +341,6 @@ namespace HostingLib.Handlers
                 IList<Data.Entities.File> files = await FileController.GetFiles(payload.UserId, payload.ParentId);
 
                 return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
-            }
-            catch (Exception ex)
-            {
-                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
-            }
-        }
-    }
-
-    public class GetFileHandler : IRequestHandler<Response>
-    {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
-        {
-            try
-            {
-                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
-                Data.Entities.File file = await FileController.GetFile(payload.FileName, payload.UserId);
-
-                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(file));
             }
             catch (Exception ex)
             {
