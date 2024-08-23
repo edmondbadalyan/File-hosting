@@ -42,6 +42,8 @@ namespace HostingLib.Controllers
             string file_path = Path.Combine(storage_path, user_id.ToString(), info.Name);
             HostingLib.Data.Entities.File file = new(info.Name, file_path, info.Length, info.LastWriteTime, user_id, parent_id);
 
+            if (System.IO.File.Exists(file_path)) throw new ArgumentException("Such file already exists!");
+
             context.Files
                 .Add(file);
 
@@ -172,13 +174,18 @@ namespace HostingLib.Controllers
 
             string folder_path = Path.Combine(parent_path, folder_name);
 
-            Directory.CreateDirectory(folder_path);
-
             Data.Entities.File folder = new(folder_name, folder_path, 0, DateTime.Now, user_id, parent_id, false, true);
+
+            if (Directory.Exists(folder_path)) throw new ArgumentException("Such folder already exists!");
+
             context.Files
                 .Add(folder);
+
+            Directory.CreateDirectory(folder_path);
+
             await context.SaveChangesAsync();
             await context.DisposeAsync();
+
 
             Console.WriteLine($"Added folder successfully with name {folder_name}, belonging to {user_id}");
         }
