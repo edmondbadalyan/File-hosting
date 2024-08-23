@@ -12,6 +12,21 @@ namespace HostingLib.Controllers
 {
     public class UserController
     {
+        private readonly static long user_quota = 16_106_127_360; //15 Гб
+
+        public static async Task<long> GetAvailableSpace(int user_id)
+        {
+            HostingDbContext context = new();
+
+            long used_space = await context.Files
+                .Where(f => f.UserId == user_id)
+                .SumAsync(f => f.Size);
+
+            await context.DisposeAsync();
+
+            return user_quota - used_space;
+        }
+
         public static async Task<User> GetUser(string email)
         {
             using HostingDbContext context = new();

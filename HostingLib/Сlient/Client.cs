@@ -18,6 +18,20 @@ namespace HostingLib.Сlient
     {
         #region User
 
+        public static async Task<long> GetAvailableSpaceAsync(TcpClient server, User user)
+        {
+            EncryptionController encryption_controller = new(user.EncryptionKey, user.Iv);
+
+            ClientEncryptionHelper encryption_helper = new(server, user.EncryptionKey, user.Iv);
+
+            UserPayload appended_request_payload = new(JsonConvert.SerializeObject(user), null, null);
+            Request appended_request = new(Requests.USER_SPACE, Payloads.USER, JsonConvert.SerializeObject(appended_request_payload));
+
+            Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, appended_request);
+
+            return JsonConvert.DeserializeObject<long>(response.Payload);
+        }
+
         public static async Task<User> GetUserAsync(TcpClient server, string email) {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
@@ -104,6 +118,12 @@ namespace HostingLib.Сlient
 
             FileInfo info = new(from_file_path);
             FileDetails details = new(info.Name, info.Length, info.Extension, info.CreationTime, info.LastWriteTime);
+
+            if(await GetAvailableSpaceAsync(server, user) < info.Length)
+            {
+                throw new InvalidDataException("Размер файла превышает доступную квоту!");
+            }
+            
             FilePayload payload = new(null, null, JsonConvert.SerializeObject(details), user.Id, parent.Id);
             Request request = new(Requests.FILE_UPLOAD, Payloads.FILE, JsonConvert.SerializeObject(payload));
 

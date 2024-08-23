@@ -94,6 +94,7 @@ namespace HostingLib.Classes
         GET_PUBLIC_KEY,
         ENCRYPTED_DATA,
 
+        USER_SPACE,
         USER_CREATE,
         USER_GET,
         USER_AUTHENTICATE,

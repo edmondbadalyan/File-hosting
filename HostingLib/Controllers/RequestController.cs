@@ -22,7 +22,8 @@ namespace HostingLib.Controllers
         {
             { Requests.GET_PUBLIC_KEY, new GetPublicKeyHandler() },
             { Requests.ENCRYPTED_DATA, new EncryptedDataHandler() },
-            
+
+            { Requests.USER_SPACE, new AvailableSpaceHandler() },
             { Requests.USER_CREATE, new CreateUserHandler() },
             { Requests.USER_GET, new GetUserHandler() },
             { Requests.USER_AUTHENTICATE, new AuthenticateUserHandler() },

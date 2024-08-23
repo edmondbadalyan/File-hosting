@@ -154,6 +154,24 @@ namespace HostingLib.Handlers
 
     #region User
 
+    public class AvailableSpaceHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request)
+        {
+            try
+            {
+                UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
+                User user = JsonConvert.DeserializeObject<User>(payload.User);
+                long space = await UserController.GetAvailableSpace(user.Id);
+                return new(Responses.Success, Payloads.USER, space.ToString());
+            }
+            catch (Exception ex)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
     public class CreateUserHandler : IRequestHandler<Response>
     {
         public async Task<Response> HandleAsync(ClientState state, Request request)
