@@ -109,7 +109,7 @@ namespace HostingLib.Сlient
 
         #region File
 
-        public static async Task UploadFileAsync(TcpClient server, string from_file_path, User user, Data.Entities.File parent)
+        public static async Task<Response> UploadFileAsync(TcpClient server, string from_file_path, User user, Data.Entities.File parent)
         {
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
             EncryptionController encryption_controller = new(key, iv);
@@ -119,9 +119,9 @@ namespace HostingLib.Сlient
             FileInfo info = new(from_file_path);
             FileDetails details = new(info.Name, info.Length, info.Extension, info.CreationTime, info.LastWriteTime);
 
-            if(await GetAvailableSpaceAsync(server, user) < info.Length)
+            if (await GetAvailableSpaceAsync(server, user) < info.Length)
             {
-                throw new InvalidDataException("Размер файла превышает доступную квоту!");
+                return new Response(Responses.Fail, Payloads.MESSAGE, "The file exceeds the available user quota!");
             }
             
             FilePayload payload = new(null, null, JsonConvert.SerializeObject(details), user.Id, parent.Id);
@@ -135,7 +135,7 @@ namespace HostingLib.Сlient
             }
 
             response = await ResponseController.ReceiveResponseAsync(server);
-            Console.WriteLine(response.Payload);
+            return response;
         }
 
         public static async Task DownloadFileAsync(TcpClient server, string to_file_path, Data.Entities.File file, User user)
