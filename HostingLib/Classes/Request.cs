@@ -91,6 +91,8 @@ namespace HostingLib.Classes
 
     public enum Requests
     {
+        CLOSE_CONNECTION,
+
         GET_PUBLIC_KEY,
         ENCRYPTED_DATA,
 

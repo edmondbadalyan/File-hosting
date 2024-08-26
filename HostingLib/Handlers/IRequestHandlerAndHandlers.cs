@@ -8,18 +8,34 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HostingLib.Handlers
 {
     public interface IRequestHandler<TResult>
     {
-        Task<TResult> HandleAsync(ClientState state, Classes.Request request);
+        Task<TResult> HandleAsync(ClientState state, Classes.Request request, CancellationToken token);
+    }
+
+    public class CloseConnectionHandler : IRequestHandler<Response>
+    {
+        public Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
+        {
+            try
+            {
+                return Task.FromResult(new Response(Responses.Success, Payloads.MESSAGE, "The connection will be closed shortly"));
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(new Response(Responses.Fail, Payloads.MESSAGE, ex.Message));
+            }
+        }
     }
 
     public class GetPublicKeyHandler : IRequestHandler<Response>
     {
-        public Task<Response> HandleAsync(ClientState state, Request request)
+        public Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
@@ -35,7 +51,7 @@ namespace HostingLib.Handlers
 
     public class EncryptedDataHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
@@ -59,7 +75,7 @@ namespace HostingLib.Handlers
 
                             if (appended_request_payload.User != null)
                             {
-                                user = appended_request_payload.User;
+                                user = encryption_controller.DecryptData(appended_request_payload.User);
                             }
 
                             if (appended_request_payload.Email != null)
@@ -87,17 +103,17 @@ namespace HostingLib.Handlers
 
                             if (appended_request_payload.File != null)
                             {
-                                file = appended_request_payload.File;
+                                file = encryption_controller.DecryptData(appended_request_payload.File);
                             }
 
                             if (appended_request_payload.FileName  != null)
                             {
-                                file_name = appended_request_payload.FileName;
+                                file_name = encryption_controller.DecryptData(appended_request_payload.FileName);
                             }
 
                             if (appended_request_payload.FileDetails != null)
                             {
-                                file_info = appended_request_payload.FileDetails;
+                                file_info = encryption_controller.DecryptData(appended_request_payload.FileDetails);
                             }
 
                             user_id = appended_request_payload.UserId;
@@ -119,15 +135,15 @@ namespace HostingLib.Handlers
 
                             if(appended_request_payload.Folder != null)
                             {
-                                folder = appended_request_payload.Folder;
+                                folder = encryption_controller.DecryptData(appended_request_payload.Folder);
                             }
                             if(appended_request_payload.FolderName != null)
                             {
-                                folder_name = appended_request_payload.FolderName;
+                                folder_name = encryption_controller.DecryptData(appended_request_payload.FolderName);
                             }
                             if(appended_request_payload.FolderPath != null)
                             {
-                                folder_path = appended_request_payload.FolderPath;
+                                folder_path = encryption_controller.DecryptData(appended_request_payload.FolderPath);
                             }
 
                             user_id = appended_request_payload.UserId;
@@ -142,7 +158,7 @@ namespace HostingLib.Handlers
                         }
                 }
 
-                Response response = await RequestController.HandleRequestAsync<Response>(state, decrypted_request);
+                Response response = await RequestController.HandleRequestAsync<Response>(state, decrypted_request, token);
                 return response;
             }
             catch (Exception ex)
@@ -156,14 +172,18 @@ namespace HostingLib.Handlers
 
     public class AvailableSpaceHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
-                long space = await UserController.GetAvailableSpace(user.Id);
+                long space = await UserController.GetAvailableSpace(user.Id, token);
                 return new(Responses.Success, Payloads.USER, space.ToString());
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -174,13 +194,17 @@ namespace HostingLib.Handlers
 
     public class CreateUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
-                await UserController.CreateUser(payload.Email, payload.Password);
+                await UserController.CreateUser(payload.Email, payload.Password, token);
                 return new(Responses.Success, Payloads.MESSAGE, $"User created successfully with email {payload.Email} and pass {payload.Password}");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -191,13 +215,17 @@ namespace HostingLib.Handlers
 
     public class GetUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
-                User user = await UserController.GetUser(payload.Email);
+                User user = await UserController.GetUser(payload.Email, token);
                 return new(Responses.Success, Payloads.USER, JsonConvert.SerializeObject(user));
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -208,7 +236,7 @@ namespace HostingLib.Handlers
 
     public class AuthenticateUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
@@ -216,6 +244,7 @@ namespace HostingLib.Handlers
                 User user = AuthorizationController.Authenticate(JsonConvert.DeserializeObject<User>(payload.User), payload.Password);
                 return new(Responses.Success, Payloads.USER, JsonConvert.SerializeObject(user));
             }
+
             catch (Exception ex)
             {
                 return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
@@ -225,14 +254,18 @@ namespace HostingLib.Handlers
 
     public class UpdateUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
-                await UserController.UpdateUser(user, payload.Password);
+                await UserController.UpdateUser(user, payload.Password, token);
                 return new(Responses.Success, Payloads.MESSAGE, "User updated successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -243,14 +276,18 @@ namespace HostingLib.Handlers
 
     public class DeleteUserHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
-                await UserController.DeleteUser(user);
+                await UserController.DeleteUser(user, token);
                 return new(Responses.Success, Payloads.MESSAGE, "User deleted successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -264,7 +301,7 @@ namespace HostingLib.Handlers
 
     public class UploadFileHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
@@ -273,12 +310,16 @@ namespace HostingLib.Handlers
                 string file_path = Path.Combine(FileController.storage_path, payload.UserId.ToString(), info.Name);
 
                 Response response = new Response(Responses.Success, Payloads.MESSAGE, "Ready to receive file");
-                await ResponseController.SendResponseAsync(state.Client, response);
+                await ResponseController.SendResponseAsync(state.Client, response, token);
 
-                await FileController.DownloadFileAsync(state.Client, file_path);
-                await FileController.CreateFile(info, payload.UserId, payload.ParentId);
+                await FileController.DownloadFileAsync(state.Client, file_path, token);
+                await FileController.CreateFile(info, payload.UserId, payload.ParentId, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "File uploaded successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -289,7 +330,7 @@ namespace HostingLib.Handlers
 
     public class DownloadFileHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
@@ -298,11 +339,15 @@ namespace HostingLib.Handlers
                 string file_path = Path.Combine(FileController.storage_path, payload.UserId.ToString(), file.Name);
 
                 Response response = new Response(Responses.Success, Payloads.MESSAGE, "Ready to send file");
-                await ResponseController.SendResponseAsync(state.Client, response);
+                await ResponseController.SendResponseAsync(state.Client, response, token);
 
-                await FileController.UploadFileAsync(state.Client, file_path);
+                await FileController.UploadFileAsync(state.Client, file_path, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "File downloaded successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -313,14 +358,18 @@ namespace HostingLib.Handlers
 
     public class GetFileHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
-                Data.Entities.File file = await FileController.GetFile(payload.FileName, payload.UserId);
+                Data.Entities.File file = await FileController.GetFile(payload.FileName, payload.UserId, token);
 
                 return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(file));
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -331,17 +380,21 @@ namespace HostingLib.Handlers
 
     public class GetAllFilesHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
 
-                IList<Data.Entities.File> files = await FileController.GetAllFiles(payload.UserId);
+                IList<Data.Entities.File> files = await FileController.GetAllFiles(payload.UserId, token);
 
                 return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
             }
-            catch(Exception ex)
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
+            }
+            catch (Exception ex)
             {
                 return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
             }
@@ -350,15 +403,19 @@ namespace HostingLib.Handlers
 
     public class GetFilesHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
 
-                IList<Data.Entities.File> files = await FileController.GetFiles(payload.UserId, payload.ParentId);
+                IList<Data.Entities.File> files = await FileController.GetFiles(payload.UserId, payload.ParentId, token);
 
                 return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -369,15 +426,19 @@ namespace HostingLib.Handlers
 
     public class MoveFileHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
-                await FileController.MoveFile(file, payload.FileName);
+                await FileController.MoveFile(file, payload.FileName, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "File moved successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -388,15 +449,19 @@ namespace HostingLib.Handlers
 
     public class DeleteFileHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
-                await FileController.DeleteFile(file);
+                await FileController.DeleteFile(file, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "File deleted successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -407,15 +472,19 @@ namespace HostingLib.Handlers
 
     public class EraseFileHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
-                await FileController.EraseFile(file);
+                await FileController.EraseFile(file, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "File erased successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -431,14 +500,18 @@ namespace HostingLib.Handlers
 
     public class CreateFolderHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
-                await FileController.CreateFolder(payload.FolderName, payload.UserId);
+                await FileController.CreateFolder(payload.FolderName, payload.UserId, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "Folder created successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -449,14 +522,18 @@ namespace HostingLib.Handlers
 
     public class GetFolderHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
-                Data.Entities.File folder = await FileController.GetFolder(payload.FolderName);
+                Data.Entities.File folder = await FileController.GetFolder(payload.FolderName, token);
 
                 return new(Responses.Success, Payloads.FOLDER, JsonConvert.SerializeObject(folder));
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -467,15 +544,19 @@ namespace HostingLib.Handlers
 
     public class MoveFolderHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
                 Data.Entities.File folder = JsonConvert.DeserializeObject<Data.Entities.File>(payload.Folder);
-                await FileController.MoveFolder(folder, payload.FolderPath);
+                await FileController.MoveFolder(folder, payload.FolderPath, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "Folder moved successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -486,15 +567,19 @@ namespace HostingLib.Handlers
 
     public class DeleteFolderHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
                 Data.Entities.File folder = JsonConvert.DeserializeObject<Data.Entities.File>(payload.Folder);
-                await FileController.DeleteFolder(folder);
+                await FileController.DeleteFolder(folder, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "Folder moved to deleted successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {
@@ -505,15 +590,19 @@ namespace HostingLib.Handlers
 
     public class EraseFolderHandler : IRequestHandler<Response>
     {
-        public async Task<Response> HandleAsync(ClientState state, Request request)
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
         {
             try
             {
                 FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
                 Data.Entities.File folder = JsonConvert.DeserializeObject<Data.Entities.File>(payload.Folder);
-                await FileController.EraseFolder(folder);
+                await FileController.EraseFolder(folder, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "Folder erased successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
             }
             catch (Exception ex)
             {

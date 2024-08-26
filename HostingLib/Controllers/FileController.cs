@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TCPLib;
 
@@ -22,20 +23,20 @@ namespace HostingLib.Controllers
 
         #region File
 
-        public static async Task UploadFileAsync(TcpClient client, string? file_path)
+        public static async Task UploadFileAsync(TcpClient client, string? file_path, CancellationToken token)
         {
             using FileStream uploaded_file = new(file_path, FileMode.Open, FileAccess.Read);
             long file_length = uploaded_file.Length;
-            await TCP.SendFile(client, uploaded_file, file_length);
+            await TCP.SendFile(client, uploaded_file, file_length, token);
         }
 
-        public static async Task DownloadFileAsync(TcpClient client, string? file_path)
+        public static async Task DownloadFileAsync(TcpClient client, string? file_path, CancellationToken token)
         {
             using FileStream new_file = System.IO.File.Create(file_path);
-            await TCP.ReceiveFile(client, new_file);
+            await TCP.ReceiveFile(client, new_file, token);
         }
 
-        public static async Task CreateFile(FileDetails info, int user_id, int parent_id)
+        public static async Task CreateFile(FileDetails info, int user_id, int parent_id, CancellationToken token)
         {
             HostingDbContext context = new();
 
@@ -47,19 +48,19 @@ namespace HostingLib.Controllers
             context.Files
                 .Add(file);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             Console.WriteLine($"File {file.Name} created successfully with path {file.Path} belonging to {user_id}");
         }
 
-        public static async Task<HostingLib.Data.Entities.File> GetFile(string file_path, int user_id)
+        public static async Task<HostingLib.Data.Entities.File> GetFile(string file_path, int user_id, CancellationToken token)
         {
             HostingDbContext context = new();
 
             HostingLib.Data.Entities.File file = await context.Files
                 .Where(f => f.Path == file_path && f.UserId == user_id)
-                .SingleOrDefaultAsync();
+                .SingleOrDefaultAsync(token);
 
             await context.DisposeAsync();
 
@@ -75,13 +76,13 @@ namespace HostingLib.Controllers
             return file;
         }
 
-        public static async Task<IList<HostingLib.Data.Entities.File>> GetAllFiles(int user_id)
+        public static async Task<IList<HostingLib.Data.Entities.File>> GetAllFiles(int user_id, CancellationToken token)
         {
             HostingDbContext context = new();
 
             IList<HostingLib.Data.Entities.File> files = await context.Files
                 .Where(f => f.UserId == user_id)
-                .ToListAsync();
+                .ToListAsync(token);
 
             await context.DisposeAsync();
 
@@ -93,13 +94,13 @@ namespace HostingLib.Controllers
             return files;
         }
 
-        public static async Task<IList<HostingLib.Data.Entities.File>> GetFiles(int user_id, int parent_id)
+        public static async Task<IList<HostingLib.Data.Entities.File>> GetFiles(int user_id, int parent_id, CancellationToken token)
         {
             HostingDbContext context = new();
 
             IList<HostingLib.Data.Entities.File> files = await context.Files
                 .Where(f => f.UserId == user_id && f.ParentId == parent_id)
-                .ToListAsync();
+                .ToListAsync(token);
 
             await context.DisposeAsync();
 
@@ -111,7 +112,7 @@ namespace HostingLib.Controllers
             return files;
         }
 
-        public static async Task MoveFile(HostingLib.Data.Entities.File file, string folder_to)
+        public static async Task MoveFile(HostingLib.Data.Entities.File file, string folder_to, CancellationToken token)
         {
             HostingDbContext context = new();
 
@@ -122,13 +123,13 @@ namespace HostingLib.Controllers
             context.Files.
                 Update(file);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             Console.WriteLine($"File {file.Id} {file.Name} moved to {new_path}");
         }
 
-        public static async Task DeleteFile(HostingLib.Data.Entities.File file)
+        public static async Task DeleteFile(HostingLib.Data.Entities.File file, CancellationToken token)
         {
             HostingDbContext context = new();
 
@@ -141,20 +142,20 @@ namespace HostingLib.Controllers
             context.Files
                 .Update(file);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             Console.WriteLine($"File {file.Id} {file.Name} moved to deleted successfully!");
         }
 
-        public static async Task EraseFile(HostingLib.Data.Entities.File file)
+        public static async Task EraseFile(HostingLib.Data.Entities.File file, CancellationToken token)
         {
             HostingDbContext context = new();
 
             context.Files
                 .Remove(file);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             System.IO.File.Delete(file.Path);
@@ -166,7 +167,7 @@ namespace HostingLib.Controllers
 
         #region Folder
 
-        public static async Task CreateFolder(string folder_name, int user_id, int parent_id = -1)
+        public static async Task CreateFolder(string folder_name, int user_id, CancellationToken token, int parent_id = -1)
         {
             HostingDbContext context = new();
 
@@ -183,24 +184,24 @@ namespace HostingLib.Controllers
 
             Directory.CreateDirectory(folder_path);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
 
             Console.WriteLine($"Added folder successfully with name {folder_name}, belonging to {user_id}");
         }
 
-        public static async Task<Data.Entities.File> GetFolder(string folder_name)
+        public static async Task<Data.Entities.File> GetFolder(string folder_name, CancellationToken token)
         {
             HostingDbContext context = new();
 
             return await context.Files
                 .Where(f => f.IsDirectory && f.Name == folder_name)
-                .SingleOrDefaultAsync();
+                .SingleOrDefaultAsync(token);
                 
         }
 
-        public static async Task MoveFolder(Data.Entities.File folder, string folder_to)
+        public static async Task MoveFolder(Data.Entities.File folder, string folder_to, CancellationToken token)
         {
             HostingDbContext context = new();
 
@@ -220,13 +221,13 @@ namespace HostingLib.Controllers
                 Console.WriteLine($"File {file.Id} {file.Name} moved to {new_path}");
             }
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             Console.WriteLine($"Folder {folder.Name} moved successfully to {new_folder_path}");
         }
 
-        public static async Task DeleteFolder(Data.Entities.File folder)
+        public static async Task DeleteFolder(Data.Entities.File folder, CancellationToken token)
         {
             HostingDbContext context = new();
 
@@ -254,13 +255,13 @@ namespace HostingLib.Controllers
             context.
                 Update(folder);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             Console.WriteLine($"Folder {folder.Name} moved to deleted successfully!");
         }
 
-        public static async Task EraseFolder(Data.Entities.File folder)
+        public static async Task EraseFolder(Data.Entities.File folder, CancellationToken token)
         {
             HostingDbContext context = new();
 
@@ -276,7 +277,7 @@ namespace HostingLib.Controllers
 
             context.Files.Remove(folder);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             Console.WriteLine("Folder and files erased successfully!");

@@ -17,20 +17,13 @@ namespace HostingLib.Data.Entities
         public string Password { get; set; }
         [Required]
         public bool Permission { get; set; }
-        [Required]
-        public byte[] EncryptionKey { get; set; }
-        [Required]
-        [Column(TypeName = "varbinary(16)")]
-        public byte[] Iv { get; set; }
         public ICollection<File> Files { get; set; } = new List<File>();
 
-        public User(string email, string password, bool permission, byte[] encryptionKey, byte[] iv)
-        {
+        public User(string email, string password, bool permission)
+        { 
             Email = email;
             Password = password;
             Permission = permission;
-            EncryptionKey = encryptionKey;
-            Iv = iv;
         }
     }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HostingLib.Controllers
@@ -16,8 +17,7 @@ namespace HostingLib.Controllers
         {
             if (user is not null)
             {
-                EncryptionController encryption_controller = new(user.EncryptionKey, user.Iv);
-                if (encryption_controller.DecryptData(user.Password) == given_password)
+                if (BCrypt.Net.BCrypt.Verify(given_password, user.Password))
                 {
                     Console.WriteLine($"User found: {user.Id} {user.Email}");
                     return user;

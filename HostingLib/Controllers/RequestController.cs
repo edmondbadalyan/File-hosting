@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TCPLib;
 using Request = HostingLib.Classes.Request;
@@ -20,6 +21,8 @@ namespace HostingLib.Controllers
 
         public static readonly Dictionary<Requests, IRequestHandler<Response>> request_handlers = new()
         {
+            { Requests.CLOSE_CONNECTION, new CloseConnectionHandler() },
+
             { Requests.GET_PUBLIC_KEY, new GetPublicKeyHandler() },
             { Requests.ENCRYPTED_DATA, new EncryptedDataHandler() },
 
@@ -50,31 +53,33 @@ namespace HostingLib.Controllers
         {
             ClientState state = new(client);
             client_states[client] = state;
-            await ReceiveRequestAsync(state);
+            CancellationTokenSource token = new();
+            await ReceiveRequestAsync(state, token.Token);
         }
 
-        public static async Task SendRequestAsync(TcpClient client, Request request)
+        public static async Task SendRequestAsync(TcpClient client, Request request, CancellationToken token)
         {
-            await TCP.SendString(client, JsonConvert.SerializeObject(request));
+            await TCP.SendString(client, JsonConvert.SerializeObject(request), token);
         }
 
-        public static async Task ReceiveRequestAsync(ClientState state)
+        public static async Task ReceiveRequestAsync(ClientState state, CancellationToken token)
         {
             string received_json = await TCP.ReceiveString(state.Client);
             Console.WriteLine(received_json);
             Request request = JsonConvert.DeserializeObject<Request>(received_json);
-            Response response = await HandleRequestAsync<Response>(state, request);
-            await ResponseController.SendResponseAsync(state.Client, response);
+            Response response = await HandleRequestAsync<Response>(state, request, token);
+            await ResponseController.SendResponseAsync(state.Client, response, token);
+            if(request.RequestType == Requests.CLOSE_CONNECTION) state.Client.Close(); 
         }
 
-        public static async Task<TResult> HandleRequestAsync<TResult>(ClientState state, Request request)
+        public static async Task<TResult> HandleRequestAsync<TResult>(ClientState state, Request request, CancellationToken token)
         {
             if (request_handlers.TryGetValue(request.RequestType, out var handler))
             {
-                var typed_handler = handler as IRequestHandler<TResult>;
+                IRequestHandler<TResult> typed_handler = handler as IRequestHandler<TResult>;
                 if(typed_handler != null)
                 {
-                    return await typed_handler.HandleAsync(state, request);
+                    return await typed_handler.HandleAsync(state, request, token);
                 }
                 else
                 {

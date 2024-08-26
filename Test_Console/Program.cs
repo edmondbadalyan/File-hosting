@@ -22,7 +22,7 @@ namespace Test_Console
         static async Task Main(string[] args)
         {
             TcpClient server;
-            server = new("192.168.1.133", 2024);
+            server = new("192.168.0.10", 2024);
 
             string email, password;
             Console.WriteLine("Input email and password!");
@@ -30,10 +30,15 @@ namespace Test_Console
             password = Console.ReadLine();
 
             User received_user = await Client.GetUserAsync(server, email);
-            if (received_user == null)
+            User user = await Client.AuthenticateUserAsync(server, received_user, password);
+            Console.WriteLine($"Received and authenticated user {user.Id} {user.Email} {user.Password}");
+
+            if(await Client.CloseConnectionAsync(server) == true)
             {
-                await Client.CreateUserAsync(server, email, password);
+                Console.WriteLine("Connection closed.");
             }
+            
+
             //else
             //{
             //    Console.WriteLine("Enter new password!");
@@ -41,27 +46,27 @@ namespace Test_Console
             //    await Client.UpdateUserAsync(server, received_user, password);
             //}
 
-            if (received_user != null)
-            {
-                User user = await Client.AuthenticateUserAsync(server, received_user, password);
-                if(user != null)
-                {
-                    Console.WriteLine($"{user.Id} {user.Email} {user.Password}");
-                }
-                else
-                {
-                    Console.WriteLine("Wrong password!");
-                }
-            }
+            //if (received_user != null)
+            //{
+            //    User user = await Client.AuthenticateUserAsync(server, received_user, password);
+            //    if(user != null)
+            //    {
+            //        Console.WriteLine($"{user.Id} {user.Email} {user.Password}");
+            //    }
+            //    else
+            //    {
+            //        Console.WriteLine("Wrong password!");
+            //    }
+            //}
             //string file_path = @"C:\Users\Роман\Downloads\NQoZ_CwqyEM.jpg";
             //await Client.SendFileAsync(server, file_path, received_user.Id);
 
-            IList<HostingLib.Data.Entities.File> files = await Client.GetAllFilesAsync(server, received_user);
+            //IList<HostingLib.Data.Entities.File> files = await Client.GetAllFilesAsync(server, received_user);
 
-            foreach(HostingLib.Data.Entities.File file in files)
-            {
-                Console.WriteLine($"{file.Name} {file.Path}");
-            }
+            //foreach(HostingLib.Data.Entities.File file in files)
+            //{
+            //    Console.WriteLine($"{file.Name} {file.Path}");
+            //}
         }
     }
 }

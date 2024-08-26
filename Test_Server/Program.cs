@@ -26,7 +26,7 @@ while(true)
 async void ListenToClient(TcpClient client)
 {
     Console.WriteLine($"{client.Client.RemoteEndPoint} {DateTime.Now}");
-    while (true)
+    while (client.Connected)
     {
         await RequestController.HandleClientAsync(client);
     }

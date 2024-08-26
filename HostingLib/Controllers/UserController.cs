@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HostingLib.Controllers
@@ -14,32 +15,32 @@ namespace HostingLib.Controllers
     {
         private readonly static long user_quota = 16_106_127_360; //15 Гб
 
-        public static async Task<long> GetAvailableSpace(int user_id)
+        public static async Task<long> GetAvailableSpace(int user_id, CancellationToken token)
         {
             HostingDbContext context = new();
 
             long used_space = await context.Files
                 .Where(f => f.UserId == user_id)
-                .SumAsync(f => f.Size);
+                .SumAsync(f => f.Size, token);
 
             await context.DisposeAsync();
 
             return user_quota - used_space;
         }
 
-        public static async Task<User> GetUser(string email)
+        public static async Task<User> GetUser(string email, CancellationToken token)
         {
             using HostingDbContext context = new();
-            User user = await context.Users.SingleOrDefaultAsync(u => u.Email == email);
+            User user = await context.Users.SingleOrDefaultAsync(u => u.Email == email, token);
             await context.DisposeAsync();
             return user;
         }
 
-        public static async Task CreateUser(string email, string password)
+        public static async Task CreateUser(string email, string password, CancellationToken token)
         {
             using HostingDbContext context = new();
 
-            User user = await GetUser(email);
+            User user = await GetUser(email, token);
 
             if(user != null)
             {
@@ -47,13 +48,11 @@ namespace HostingLib.Controllers
             }
             else
             { 
-                var (key, iv) = EncryptionController.GenerateKeyAndIv();
-                EncryptionController encryption_controller = new(key, iv);
-                user = new(email, encryption_controller.EncryptData(password), true, key, iv);
+                user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true);
 
                 context.Users
                     .Add(user);
-                await context.SaveChangesAsync();
+                await context.SaveChangesAsync(token);
                 await context.DisposeAsync();
 
                 string user_directory = Path.Combine(FileController.storage_path, user.Id.ToString());
@@ -65,29 +64,28 @@ namespace HostingLib.Controllers
 
         }
 
-        public static async Task UpdateUser(User user, string new_password)
+        public static async Task UpdateUser(User user, string new_password, CancellationToken token)
         {
             using HostingDbContext context = new();
 
-            EncryptionController encryption_controller = new(user.EncryptionKey, user.Iv);
-            string encrypted_password = encryption_controller.EncryptData(new_password);
+            string encrypted_password = BCrypt.Net.BCrypt.HashPassword(new_password);
 
             user.Password = encrypted_password;
             context.Users.
                 Update(user);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             Console.WriteLine($"Updated user {user.Email}, new password is {new_password}");
         }
 
-        public static async Task DeleteUser(User user)
+        public static async Task DeleteUser(User user, CancellationToken token)
         {
             using HostingDbContext context = new();
 
             context.Users
                 .Remove(user);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(token);
             await context.DisposeAsync();
 
             Console.WriteLine($"Deleted user {user.Id} {user.Email}");
