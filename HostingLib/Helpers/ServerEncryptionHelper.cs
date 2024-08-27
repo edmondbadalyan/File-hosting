@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HostingLib.Controllers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -14,6 +15,7 @@ namespace HostingLib.Helpers
 
         public static string GetPublicKey()
         {
+            LoggingController.LogDebug($"ServerEncryptionHelper.GetPublicKey - returned the public key");
             return rsa.ToXmlString(false); // false to get the public key only
         }
 

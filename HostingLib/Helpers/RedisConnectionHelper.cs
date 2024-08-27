@@ -9,11 +9,12 @@ namespace HostingLib.Helpers
 {
     public class RedisConnectionHelper
     {
-        private static Lazy<ConnectionMultiplexer> lazy_connection = new Lazy<ConnectionMultiplexer>(() =>
+        private static readonly Lazy<ConnectionMultiplexer> lazy_connection = new Lazy<ConnectionMultiplexer>(() =>
         {
             return ConnectionMultiplexer.Connect("localhost");
         });
 
-        public static ConnectionMultiplexer Connection => lazy_connection.Value;
+        private static ConnectionMultiplexer Connection => lazy_connection.Value;
+        public static readonly IDatabase db = Connection.GetDatabase();
     }
 }

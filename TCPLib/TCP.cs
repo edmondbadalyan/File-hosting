@@ -69,12 +69,16 @@ namespace TCPLib
         {
             await Console.Out.WriteLineAsync("Started sending file");
 
+            token.ThrowIfCancellationRequested();
+
             await SendLong(client, length, token);
 
             byte[] buffer = new byte[1024];
             int pos = 0;
             while (pos < length)
             {
+                token.ThrowIfCancellationRequested();
+
                 int read = await file.ReadAsync(buffer, 0, (int)Math.Min(buffer.Length, length - pos), token);
                 await client.GetStream().WriteAsync(buffer, 0, read, token);
                 pos += read;
@@ -93,6 +97,8 @@ namespace TCPLib
 
         public static async Task<byte[]> ReceiveFixed(TcpClient client, int length, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             byte[] buffer = new byte[length];
             await client.GetStream().ReadAsync(buffer, 0, length, token);
             return buffer;
@@ -107,6 +113,8 @@ namespace TCPLib
 
         public static async Task<int> ReceiveInt(TcpClient client, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             byte[] length_buffer = await ReceiveFixed(client, sizeof(int), token);
             await Console.Out.WriteLineAsync($"Received int: {BitConverter.ToInt32(length_buffer)}");
             return BitConverter.ToInt32(length_buffer);
@@ -121,6 +129,8 @@ namespace TCPLib
 
         public static async Task<long> ReceiveLong(TcpClient client, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             byte[] length_buffer = await ReceiveFixed(client, sizeof(long), token);
             await Console.Out.WriteLineAsync($"Received long: {BitConverter.ToInt64(length_buffer)}");
             return BitConverter.ToInt64(length_buffer);
@@ -134,6 +144,8 @@ namespace TCPLib
 
         public static async Task<byte[]> ReceiveVariable(TcpClient client, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             int length = await ReceiveInt(client, token);
             return await ReceiveFixed(client, length, token);
         }
@@ -147,6 +159,8 @@ namespace TCPLib
 
         public static async Task<string> ReceiveString(TcpClient client, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             byte[] string_buffer = await ReceiveVariable(client, token);
             await Console.Out.WriteLineAsync($"Received string: {System.Text.Encoding.UTF8.GetString(string_buffer)}");
             return System.Text.Encoding.UTF8.GetString(string_buffer);
@@ -154,6 +168,8 @@ namespace TCPLib
 
         public static async Task ReceiveFile(TcpClient client, Stream file, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             long length = await ReceiveLong(client, token);
 
             await Console.Out.WriteLineAsync("Started receiving file");
@@ -162,6 +178,8 @@ namespace TCPLib
 
             while (pos < length)
             {
+                token.ThrowIfCancellationRequested();
+
                 int read = await client.GetStream().ReadAsync(buffer, 0, (int)Math.Min(length - pos, buffer.Length), token);
                 await file.WriteAsync(buffer, 0, read, token);
                 pos += read;

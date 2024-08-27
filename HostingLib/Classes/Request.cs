@@ -29,9 +29,9 @@ namespace HostingLib.Classes
         public string? FileName { get; set; }
         public string? FileDetails { get; set; }
         public int UserId { get; set; }
-        public int ParentId {  get; set; }
+        public string ParentId {  get; set; }
 
-        public FilePayload(string file, string fileName, string fileDetails, int userId, int parentId)
+        public FilePayload(string file, string fileName, string fileDetails, int userId, string parentId)
         {
             File = file;
             FileName = fileName;
@@ -48,9 +48,9 @@ namespace HostingLib.Classes
         public string? FolderName { get; set; }
         public string? FolderPath { get; set; }
         public int UserId { get; set; }
-        public int ParentId { get; set; }
+        public string ParentId { get; set; }
 
-        public FolderPayload(string folder, string folderName, string folderPath, int userId, int parentId)
+        public FolderPayload(string folder, string folderName, string folderPath, int userId, string parentId)
         {
             Folder = folder;
             FolderName = folderName;

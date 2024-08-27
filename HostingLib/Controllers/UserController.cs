@@ -19,48 +19,78 @@ namespace HostingLib.Controllers
         {
             HostingDbContext context = new();
 
-            long used_space = await context.Files
-                .Where(f => f.UserId == user_id)
-                .SumAsync(f => f.Size, token);
+            try
+            {
+                token.ThrowIfCancellationRequested();
 
-            await context.DisposeAsync();
+                long used_space = await context.Files
+                    .Where(f => f.UserId == user_id)
+                    .SumAsync(f => f.Size, token);
 
-            return user_quota - used_space;
+
+                LoggingController.LogInfo($"UserController.AvailableSpace - request for user {user_id} retuned {user_quota - used_space}");
+                return user_quota - used_space;
+            }
+            finally
+            {
+                await context.DisposeAsync();
+            }
         }
 
         public static async Task<User> GetUser(string email, CancellationToken token)
         {
             using HostingDbContext context = new();
-            User user = await context.Users.SingleOrDefaultAsync(u => u.Email == email, token);
-            await context.DisposeAsync();
-            return user;
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                User user = await context.Users.SingleOrDefaultAsync(u => u.Email == email, token);
+                LoggingController.LogInfo($"UserController.GetUser - request with email {email} returned {(user is null ? null : user.Id)}");
+                return user;
+            }
+            finally
+            {
+                await context.DisposeAsync();
+            }
         }
 
         public static async Task CreateUser(string email, string password, CancellationToken token)
         {
             using HostingDbContext context = new();
 
-            User user = await GetUser(email, token);
-
-            if(user != null)
+            try
             {
-                throw new Exception("Such user already exists!");
-            }
-            else
-            { 
-                user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true);
+                token.ThrowIfCancellationRequested();
 
-                context.Users
-                    .Add(user);
-                await context.SaveChangesAsync(token);
+                User user = await GetUser(email, token);
+
+                if(user != null)
+                {
+                    LoggingController.LogError($"UserController.CreateUser - error: user with the email {email} already exists");
+                    throw new Exception("Such user already exists!");
+                }
+                else
+                { 
+                    user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true);
+
+                    token.ThrowIfCancellationRequested();
+
+                    context.Users
+                        .Add(user);
+                    await context.SaveChangesAsync(token);
+
+                    string user_directory = Path.Combine(FileController.storage_path, user.Id.ToString());
+                    Directory.CreateDirectory(user_directory);
+                    Directory.CreateDirectory(Path.Combine(user_directory, "Deleted"));
+
+                    LoggingController.LogInfo($"UserController.CreateUser - successfully created user with email: {email}");
+                    Console.WriteLine($"User created successfully with email: {email}");
+                }
+            }
+            finally
+            {
                 await context.DisposeAsync();
-
-                string user_directory = Path.Combine(FileController.storage_path, user.Id.ToString());
-                Directory.CreateDirectory(user_directory);
-                Directory.CreateDirectory(Path.Combine(user_directory, "Deleted"));
-
-                Console.WriteLine($"User created successfully with email: {email} and password: {password} (encrypted - {user.Password}");
             }
+
 
         }
 
@@ -68,27 +98,46 @@ namespace HostingLib.Controllers
         {
             using HostingDbContext context = new();
 
-            string encrypted_password = BCrypt.Net.BCrypt.HashPassword(new_password);
+            try
+            {
+                string encrypted_password = BCrypt.Net.BCrypt.HashPassword(new_password);
 
-            user.Password = encrypted_password;
-            context.Users.
-                Update(user);
-            await context.SaveChangesAsync(token);
-            await context.DisposeAsync();
+                token.ThrowIfCancellationRequested();
 
-            Console.WriteLine($"Updated user {user.Email}, new password is {new_password}");
+                user.Password = encrypted_password;
+                context.Users.
+                    Update(user);
+                await context.SaveChangesAsync(token);
+
+                LoggingController.LogInfo($"UserController.UpdateUser - updated user {user.Email}");
+                Console.WriteLine($"Updated user {user.Email}");
+            }
+            finally
+            {
+                await context.DisposeAsync();
+            }
         }
 
         public static async Task DeleteUser(User user, CancellationToken token)
         {
             using HostingDbContext context = new();
 
-            context.Users
-                .Remove(user);
-            await context.SaveChangesAsync(token);
-            await context.DisposeAsync();
+            try
+            {
+                token.ThrowIfCancellationRequested();
 
-            Console.WriteLine($"Deleted user {user.Id} {user.Email}");
+                context.Users
+                    .Remove(user);
+                await context.SaveChangesAsync(token);
+
+                LoggingController.LogInfo($"UserController.DeleteUser - deleted user {user.Id} {user.Email}");
+                Console.WriteLine($"Deleted user {user.Id} {user.Email}");
+            }
+            finally
+            {
+                await context.DisposeAsync();
+            }
+
         }
     }
 

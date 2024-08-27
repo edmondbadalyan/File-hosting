@@ -17,12 +17,14 @@ namespace HostingLib.Controllers
         {
             string response_json = JsonConvert.SerializeObject(response);
             await TCP.SendString(client, response_json, token);
-
+            LoggingController.LogDebug($"ResponseController.SendResponseAsync - Sent response {response.ResponseType.ToString()} with payload type {response.PayloadType.ToString()}");
+                
         }
 
         public static async Task<Response> ReceiveResponseAsync(TcpClient client, CancellationToken token)
         {
             string received_json = await TCP.ReceiveString(client, token);
+            LoggingController.LogDebug($"ResponseController.ReceiveResponseAsync - Received {received_json}");
             return JsonConvert.DeserializeObject<Response>(received_json);
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,12 +27,12 @@ namespace HostingLib.Data.Entities
         public bool IsDirectory { get; set; }
         [Required]
         public bool IsDeleted { get; set; }
-        [Required]
-        public int ParentId { get; set; }
+        [AllowNull]
+        public int? ParentId { get; set; }
         public File Parent { get; set; }
         public ICollection<File> Children { get; set; }
 
-        public File(string name, string path, long size, DateTime changeDate, int userId, int parentId, bool isDeleted = false, bool isDirectory = false)
+        public File(string name, string path, long size, DateTime changeDate, int userId, int? parentId, bool isDeleted = false, bool isDirectory = false)
         {
             Name = name;
             Path = path;

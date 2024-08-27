@@ -33,6 +33,8 @@ namespace Test_Console
             User user = await Client.AuthenticateUserAsync(server, received_user, password);
             Console.WriteLine($"Received and authenticated user {user.Id} {user.Email} {user.Password}");
 
+            await Client.UploadFileAsync(server, "C:\\Users\\Роман\\Downloads\\Инструкция.pdf", user, null);
+
             if(await Client.CloseConnectionAsync(server) == true)
             {
                 Console.WriteLine("Connection closed.");

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -97,7 +98,8 @@ namespace HostingLib.Handlers
                         {
                             string file = null, file_name = null;
                             string file_info = null;
-                            int user_id = 0, parent_id = 0;
+                            int user_id = 0;
+                            string parent_id = null;
 
                             appended_request_payload = JsonConvert.DeserializeObject<FilePayload>(appended_request.Payload);
 
@@ -129,7 +131,8 @@ namespace HostingLib.Handlers
                     case Payloads.FOLDER:
                         {
                             string folder = null, folder_name = null, folder_path = null;
-                            int user_id = 0, parent_id = 0;
+                            int user_id = 0;
+                            string parent_id = null;
 
                             appended_request_payload = JsonConvert.DeserializeObject<FilePayload>(appended_request.Payload);
 
@@ -309,13 +312,28 @@ namespace HostingLib.Handlers
                 FileDetails info = JsonConvert.DeserializeObject<FileDetails>(payload.FileDetails);
                 string file_path = Path.Combine(FileController.storage_path, payload.UserId.ToString(), info.Name);
 
-                Response response = new Response(Responses.Success, Payloads.MESSAGE, "Ready to receive file");
+                if (System.IO.File.Exists(file_path))
+                {
+                    LoggingController.LogError($"UploadFileHandler.HandleAsync - Error: file {Path.GetFileName(file_path)} already exists at {file_path}");
+                    throw new ArgumentException($"File {Path.GetFileName(file_path)} already exists at {file_path}");
+                }
+
+                Response response = new(Responses.Success, Payloads.MESSAGE, "Ready to receive file");
                 await ResponseController.SendResponseAsync(state.Client, response, token);
 
-                await FileController.DownloadFileAsync(state.Client, file_path, token);
-                await FileController.CreateFile(info, payload.UserId, payload.ParentId, token);
+                try
+                {
+                    await FileController.DownloadFileAsync(state.Client, file_path, token);
+                }
+                catch (Exception ex) when (ex is IOException || ex is SocketException)
+                {
+                    LoggingController.LogError($"UploadFileHandler.HandleAsync - Connection lost during file upload: {ex.Message}");
+                    return new Response(Responses.Fail, Payloads.MESSAGE, "Connection was lost during file upload.");
+                }
 
-                return new(Responses.Success, Payloads.MESSAGE, "File uploaded successfully!");
+                await FileController.CreateFile(info, payload.UserId, payload.ParentId != null ? int.Parse(payload.ParentId) : null, token);
+
+                return new Response(Responses.Success, Payloads.MESSAGE, "File uploaded successfully!");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
             {
@@ -323,10 +341,11 @@ namespace HostingLib.Handlers
             }
             catch (Exception ex)
             {
-                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+                return new Response(Responses.Fail, Payloads.MESSAGE, ex.Message);
             }
         }
     }
+
 
     public class DownloadFileHandler : IRequestHandler<Response>
     {
@@ -341,7 +360,15 @@ namespace HostingLib.Handlers
                 Response response = new Response(Responses.Success, Payloads.MESSAGE, "Ready to send file");
                 await ResponseController.SendResponseAsync(state.Client, response, token);
 
-                await FileController.UploadFileAsync(state.Client, file_path, token);
+                try
+                {
+                    await FileController.UploadFileAsync(state.Client, file_path, token);
+                }
+                catch (Exception ex) when (ex is IOException || ex is SocketException)
+                {
+                    LoggingController.LogError($"DownloadFileHandler.HandleAsync - Connection lost during file upload: {ex.Message}");
+                    return new Response(Responses.Fail, Payloads.MESSAGE, "Connection was lost during file upload.");
+                }
 
                 return new(Responses.Success, Payloads.MESSAGE, "File downloaded successfully!");
             }
@@ -409,7 +436,7 @@ namespace HostingLib.Handlers
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
 
-                IList<Data.Entities.File> files = await FileController.GetFiles(payload.UserId, payload.ParentId, token);
+                IList<Data.Entities.File> files = await FileController.GetFiles(payload.UserId, payload.ParentId != null ? int.Parse(payload.ParentId) : null, token);
 
                 return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
             }

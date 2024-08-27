@@ -54,22 +54,47 @@ namespace HostingLib.Controllers
             ClientState state = new(client);
             client_states[client] = state;
             CancellationTokenSource token = new();
-            await ReceiveRequestAsync(state, token.Token);
+            while (client.Connected)
+            {
+                await ReceiveRequestAsync(state, token.Token);
+            }
+            LoggingController.LogDebug($"Client closed connection");
+            Console.WriteLine($"Client closed connection");
+            client_states.Remove(client);
         }
 
         public static async Task SendRequestAsync(TcpClient client, Request request, CancellationToken token)
         {
+            LoggingController.LogDebug($"RequestController.SendRequestAsync - Sent request {request.RequestType.ToString()} with payload type {request.PayloadType.ToString()} to {client.Client.RemoteEndPoint}");
             await TCP.SendString(client, JsonConvert.SerializeObject(request), token);
         }
 
         public static async Task ReceiveRequestAsync(ClientState state, CancellationToken token)
         {
-            string received_json = await TCP.ReceiveString(state.Client);
-            Console.WriteLine(received_json);
-            Request request = JsonConvert.DeserializeObject<Request>(received_json);
-            Response response = await HandleRequestAsync<Response>(state, request, token);
-            await ResponseController.SendResponseAsync(state.Client, response, token);
-            if(request.RequestType == Requests.CLOSE_CONNECTION) state.Client.Close(); 
+            try
+            {
+                string received_json = await TCP.ReceiveString(state.Client);
+                Console.WriteLine(received_json);
+                LoggingController.LogDebug($"RequestControlller.ReceiveRequestAsync - Received {received_json}");
+                Request request = JsonConvert.DeserializeObject<Request>(received_json);
+                Response response = await HandleRequestAsync<Response>(state, request, token);
+                if(state.Client.Connected)
+                {
+                    LoggingController.LogDebug($"Client {state.Client.Client.RemoteEndPoint} closed connection");
+                    Console.WriteLine($"Client {state.Client.Client.RemoteEndPoint} closed connection");
+                    await ResponseController.SendResponseAsync(state.Client, response, token);
+                }
+                if (request.RequestType == Requests.CLOSE_CONNECTION)
+                {
+                    LoggingController.LogDebug($"Client {state.Client.Client.RemoteEndPoint} closed connection");
+                    Console.WriteLine($"Client {state.Client.Client.RemoteEndPoint} closed connection");
+                    state.Client.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                state.Client.Close();
+            }
         }
 
         public static async Task<TResult> HandleRequestAsync<TResult>(ClientState state, Request request, CancellationToken token)
@@ -79,15 +104,18 @@ namespace HostingLib.Controllers
                 IRequestHandler<TResult> typed_handler = handler as IRequestHandler<TResult>;
                 if(typed_handler != null)
                 {
+                    LoggingController.LogDebug($"RequestController.HandleRequestAsync - Handler found for request {request.RequestType.ToString()}");
                     return await typed_handler.HandleAsync(state, request, token);
                 }
                 else
                 {
+                    LoggingController.LogError($"RequestController.HandleRequestAsync - Handler for request type {request.RequestType.ToString()} is not of expected type.");
                     throw new InvalidOperationException($"Handler for request type {request.RequestType} is not of expected type.");
                 }
             }
             else
             {
+                LoggingController.LogError($"RequestController.HandleRequestAsync - No handler found for request type {request.RequestType.ToString()}");
                 throw new InvalidOperationException($"No handler found for request type {request.RequestType}");
             }
         }

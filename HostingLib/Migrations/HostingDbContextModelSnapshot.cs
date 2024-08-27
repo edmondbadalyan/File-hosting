@@ -43,7 +43,7 @@ namespace HostingLib.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ParentId")
+                    b.Property<int?>("ParentId")
                         .HasColumnType("int");
 
                     b.Property<string>("Path")
@@ -94,8 +94,7 @@ namespace HostingLib.Migrations
                     b.HasOne("HostingLib.Data.Entities.File", "Parent")
                         .WithMany("Children")
                         .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("HostingLib.Data.Entities.User", "User")
                         .WithMany("Files")

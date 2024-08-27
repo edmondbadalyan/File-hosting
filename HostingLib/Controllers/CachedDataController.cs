@@ -12,13 +12,17 @@ namespace HostingLib.Controllers
 {
     public class CachedDataController
     {
-        private static readonly IDatabase redis = RedisConnectionHelper.Connection.GetDatabase();
+        #region User
+
+        #endregion
+
+        #region File
 
         public static async Task<FileDetails> GetFileDetailsAsync(int file_id)
         {
             string cache_key = $"file:details:{file_id}";
 
-            RedisValue cached_details = await redis.StringGetAsync(cache_key);
+            RedisValue cached_details = await RedisConnectionHelper.db.StringGetAsync(cache_key);
 
             return !cached_details.IsNullOrEmpty ? JsonConvert.DeserializeObject<FileDetails>(cached_details) : null;
 
@@ -27,7 +31,19 @@ namespace HostingLib.Controllers
         public static async Task SetFileDetailsAsync(int file_id, FileDetails details)
         {
             string cache_key = $"file:details:{file_id}";
-            await redis.StringSetAsync(cache_key, JsonConvert.SerializeObject(details), TimeSpan.FromHours(1));
+            await RedisConnectionHelper.db.StringSetAsync(cache_key, JsonConvert.SerializeObject(details), TimeSpan.FromHours(1));
         }
+
+        public static async Task ScheduleFileDeletionAsync(string file_id, TimeSpan delay)
+        {
+            string cache_key = $"deleted_files";
+
+            long deletion_time = DateTimeOffset.UtcNow.Add(delay).ToUnixTimeSeconds();
+            await RedisConnectionHelper.db.SortedSetAddAsync(cache_key, file_id, deletion_time);
+            LoggingController.LogInfo($"Scheduled file {file_id} for deletion at {deletion_time}");
+        }
+
+        #endregion
+
     }
 }

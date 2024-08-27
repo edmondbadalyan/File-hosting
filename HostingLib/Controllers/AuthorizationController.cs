@@ -19,10 +19,12 @@ namespace HostingLib.Controllers
             {
                 if (BCrypt.Net.BCrypt.Verify(given_password, user.Password))
                 {
+                    LoggingController.LogDebug($"AuthorizationController.Authenticate - User found: {user.Id} {user.Email}");
                     Console.WriteLine($"User found: {user.Id} {user.Email}");
                     return user;
                 }
             }
+            LoggingController.LogDebug($"AuthorizationController.Authenticate - User not found");
             return null;
         }
 
