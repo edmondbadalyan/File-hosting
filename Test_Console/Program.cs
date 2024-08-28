@@ -22,7 +22,7 @@ namespace Test_Console
         static async Task Main(string[] args)
         {
             TcpClient server;
-            server = new("192.168.0.10", 2024);
+            server = new("lunarhosting.ddns.net", 8080);
 
             string email, password;
             Console.WriteLine("Input email and password!");
@@ -32,13 +32,6 @@ namespace Test_Console
             User received_user = await Client.GetUserAsync(server, email);
             User user = await Client.AuthenticateUserAsync(server, received_user, password);
             Console.WriteLine($"Received and authenticated user {user.Id} {user.Email} {user.Password}");
-
-            await Client.UploadFileAsync(server, "C:\\Users\\Роман\\Downloads\\Инструкция.pdf", user, null);
-
-            if(await Client.CloseConnectionAsync(server) == true)
-            {
-                Console.WriteLine("Connection closed.");
-            }
             
 
             //else

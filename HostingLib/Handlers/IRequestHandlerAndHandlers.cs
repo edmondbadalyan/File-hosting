@@ -89,7 +89,7 @@ namespace HostingLib.Handlers
                                 password = encryption_controller.DecryptData(appended_request_payload.Password);
                             }
 
-                            if(appended_request_payload.IsPublic != false)
+                            if(appended_request_payload.IsPublic != null)
                             {
                                 isPublic = encryption_controller.DecryptData(appended_request_payload.IsPublic);
                             }
@@ -124,7 +124,7 @@ namespace HostingLib.Handlers
                                 file_info = encryption_controller.DecryptData(appended_request_payload.FileDetails);
                             }
 
-                            if(appended_request_payload.IsPublic != false)
+                            if(appended_request_payload.IsPublic != null)
                             {
                                 isPublic = encryption_controller.DecryptData(appended_request_payload.IsPublic);
                             }
@@ -159,7 +159,7 @@ namespace HostingLib.Handlers
                             {
                                 folder_path = encryption_controller.DecryptData(appended_request_payload.FolderPath);
                             }
-                            if(appended_request_payload.IsPublic != false)
+                            if(appended_request_payload.IsPublic != null)
                             {
                                 isPublic = encryption_controller.DecryptData(appended_request_payload.IsPublic);
                             }
