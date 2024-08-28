@@ -4,6 +4,7 @@ using HostingLib.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,6 +31,7 @@ namespace HostingLib.Controllers
             {
                 token.ThrowIfCancellationRequested();
                 long file_length = uploaded_file.Length;
+
                 LoggingController.LogDebug($"FileController.UploadFileAsync - Started sending file");
                 await TCP.SendFile(client, uploaded_file, file_length, token);
                 LoggingController.LogDebug($"FileController.UploadFileAsync - File sent successfully");
@@ -53,9 +55,21 @@ namespace HostingLib.Controllers
         public static async Task DownloadFileAsync(TcpClient client, string? file_path, CancellationToken token)
         {
             using FileStream new_file = System.IO.File.Create(file_path);
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
+
+                Data.Entities.File file = await context.Files
+                    .Where(f => f.Path == file_path)
+                    .SingleOrDefaultAsync(token);
+
+                if( file == null)
+                {
+                    LoggingController.LogError($"FileController.DownloadFileAsync - File with path {file_path} not found");
+                    throw new FileNotFoundException("File not found.");
+                }
+
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - Started receiving file");
 
                 await TCP.ReceiveFile(client, new_file, token);
@@ -64,6 +78,7 @@ namespace HostingLib.Controllers
             catch (OperationCanceledException)
             {
                 LoggingController.LogError("FileController.DownloadFileAsync - Operation canceled, deleted file");
+                await new_file.DisposeAsync();
                 System.IO.File.Delete(file_path);
                 throw;
             }
@@ -76,14 +91,14 @@ namespace HostingLib.Controllers
             }
         }
 
-        public static async Task CreateFile(FileDetails info, int user_id, int? parent_id, CancellationToken token)
+        public static async Task CreateFile(FileDetails info, int user_id, int? parent_id, bool isPublic, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
                 string file_path = Path.Combine(storage_path, user_id.ToString(), info.Name);
-                HostingLib.Data.Entities.File file = new(info.Name, file_path, info.Length, info.LastWriteTime, user_id, parent_id);
+                HostingLib.Data.Entities.File file = new(info.Name, file_path, info.Length, info.LastWriteTime, user_id, parent_id, false, false, isPublic);
 
                 context.Files.Add(file);
                 await context.SaveChangesAsync(token);
@@ -102,7 +117,7 @@ namespace HostingLib.Controllers
 
         public static async Task<HostingLib.Data.Entities.File> GetFile(string file_path, int user_id, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -130,7 +145,7 @@ namespace HostingLib.Controllers
 
         public static async Task<IList<HostingLib.Data.Entities.File>> GetAllFiles(int user_id, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -148,15 +163,35 @@ namespace HostingLib.Controllers
             }
         }
 
+        public static async Task<IList<HostingLib.Data.Entities.File>> GetPublicFiles(int user_id, int? parent_id, CancellationToken token)
+        {
+            using HostingDbContext context = new();
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                LoggingController.LogDebug($"FileController.GetPublicFiles - Fetching all public files for user {user_id}");
+                IList<HostingLib.Data.Entities.File> files = await context.Files
+                    .Where(f => f.UserId == user_id && f.ParentId == parent_id && f.IsPublic && !f.IsDirectory)
+                    .ToListAsync(token);
+
+                LoggingController.LogInfo($"FileController.GetPublicFiles - Found {files.Count} files for user {user_id}");
+                return files;
+            }
+            finally
+            {
+                await context.DisposeAsync();
+            }
+        }
+
         public static async Task<IList<HostingLib.Data.Entities.File>> GetFiles(int user_id, int? parent_id, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
                 LoggingController.LogDebug($"FileController.GetFiles - Fetching files for user {user_id} in parent folder {parent_id}");
                 IList<HostingLib.Data.Entities.File> files = await context.Files
-                    .Where(f => f.UserId == user_id && f.ParentId == parent_id)
+                    .Where(f => f.UserId == user_id && f.ParentId == parent_id && !f.IsDeleted)
                     .ToListAsync(token);
 
                 LoggingController.LogInfo($"FileController.GetFiles - Found {files.Count} files for user {user_id} in parent folder {parent_id}");
@@ -170,7 +205,7 @@ namespace HostingLib.Controllers
 
         public static async Task MoveFile(HostingLib.Data.Entities.File file, string folder_to, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -191,9 +226,30 @@ namespace HostingLib.Controllers
             }
         }
 
+        public static async Task UpdateFilePublicity(HostingLib.Data.Entities.File file, bool new_publicity, CancellationToken token)
+        {
+            using HostingDbContext context = new();
+            try
+            {
+                token.ThrowIfCancellationRequested();
+
+                file.IsPublic = new_publicity;
+                
+                context.Files.Update(file);
+                await context.SaveChangesAsync(token);
+
+                Console.WriteLine($"File {file.Id} {file.Name} publicity updated");
+                LoggingController.LogInfo($"FileController.UpdatePublicity - File {file.Id} {file.Name} publicity updated");
+            }
+            finally
+            {
+                await context.DisposeAsync();
+            }
+        }
+
         public static async Task DeleteFile(HostingLib.Data.Entities.File file, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -219,7 +275,7 @@ namespace HostingLib.Controllers
 
         public static async Task EraseFile(HostingLib.Data.Entities.File file, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -239,7 +295,7 @@ namespace HostingLib.Controllers
 
         public static async Task EraseFile(int file_id, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -265,9 +321,9 @@ namespace HostingLib.Controllers
 
         #region Folder
 
-        public static async Task CreateFolder(string folder_name, int user_id, CancellationToken token, int parent_id = -1)
+        public static async Task CreateFolder(string folder_name, int user_id, int? parent_id, bool isPublic, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             string parent_path = Path.Combine(storage_path, user_id.ToString());
             string folder_path = Path.Combine(parent_path, folder_name);
 
@@ -281,7 +337,7 @@ namespace HostingLib.Controllers
                     throw new ArgumentException("Such folder already exists!");
                 }
 
-                Data.Entities.File folder = new(folder_name, folder_path, 0, DateTime.Now, user_id, parent_id, false, true);
+                Data.Entities.File folder = new(folder_name, folder_path, 0, DateTime.Now, user_id, parent_id, false, true, isPublic);
                 context.Files.Add(folder);
                 Directory.CreateDirectory(folder_path);
                 await context.SaveChangesAsync(token);
@@ -302,7 +358,7 @@ namespace HostingLib.Controllers
 
         public static async Task<Data.Entities.File> GetFolder(string folder_name, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -330,7 +386,7 @@ namespace HostingLib.Controllers
 
         public static async Task MoveFolder(Data.Entities.File folder, string folder_to, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -361,9 +417,49 @@ namespace HostingLib.Controllers
             }
         }
 
+        public static async Task UpdateFolderPublicity(Data.Entities.File folder, bool publicity, CancellationToken token)
+        {
+            using HostingDbContext context = new();
+            try
+            {
+                token.ThrowIfCancellationRequested();
+
+                context.Files.Include(f => f.Children);
+
+                folder.IsPublic = publicity;
+
+                await UpdateChildPublicityAsync(folder.Children, publicity, context, token);
+
+                await context.SaveChangesAsync(token);
+
+                LoggingController.LogInfo($"FileController.UpdateFolderPublicity - folder {folder.Name} publicity updated");
+            }
+            finally
+            {
+                await context.DisposeAsync();
+            }
+        }
+        private static async Task UpdateChildPublicityAsync(
+    ICollection<Data.Entities.File> children, bool publicity, HostingDbContext context, CancellationToken token)
+        {
+            foreach (Data.Entities.File child in children)
+            {
+                token.ThrowIfCancellationRequested();
+
+                child.IsPublic = publicity;
+                context.Files.Update(child);
+
+                if (child.IsDirectory)
+                {
+                    await context.Entry(child).Collection(f => f.Children).LoadAsync(token);
+                    await UpdateChildPublicityAsync(child.Children, publicity, context, token);
+                }
+            }
+        }
+
         public static async Task DeleteFolder(Data.Entities.File folder, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -396,7 +492,7 @@ namespace HostingLib.Controllers
 
         public static async Task EraseFolder(Data.Entities.File folder, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -425,7 +521,7 @@ namespace HostingLib.Controllers
 
         public static async Task EraseFolder(int file_id, CancellationToken token)
         {
-            HostingDbContext context = new();
+            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();

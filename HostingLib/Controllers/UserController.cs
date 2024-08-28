@@ -53,7 +53,7 @@ namespace HostingLib.Controllers
             }
         }
 
-        public static async Task CreateUser(string email, string password, CancellationToken token)
+        public static async Task CreateUser(string email, string password, bool isPublic, CancellationToken token)
         {
             using HostingDbContext context = new();
 
@@ -70,7 +70,7 @@ namespace HostingLib.Controllers
                 }
                 else
                 { 
-                    user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true);
+                    user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true, isPublic);
 
                     token.ThrowIfCancellationRequested();
 
@@ -111,6 +111,29 @@ namespace HostingLib.Controllers
 
                 LoggingController.LogInfo($"UserController.UpdateUser - updated user {user.Email}");
                 Console.WriteLine($"Updated user {user.Email}");
+            }
+            finally
+            {
+                await context.DisposeAsync();
+            }
+        }
+
+        public static async Task UpdateUserPublicity(User user, bool new_publicity, CancellationToken token)
+        {
+            using HostingDbContext context = new();
+
+            try
+            {
+
+                token.ThrowIfCancellationRequested();
+
+                user.IsPublic = new_publicity;
+                context.Users.
+                    Update(user);
+                await context.SaveChangesAsync(token);
+
+                LoggingController.LogInfo($"UserController.UpdateUserPublicity - updated user publicity {user.Email}");
+                Console.WriteLine($"Updated user publicty {user.Email}");
             }
             finally
             {

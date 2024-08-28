@@ -13,12 +13,14 @@ namespace HostingLib.Classes
         public string? User { get; set; }
         public string? Email { get; set; }
         public string? Password { get; set; }
+        public string? IsPublic { get; set; }
 
-        public UserPayload(string user, string email, string password)
+        public UserPayload(string user, string email, string password, string isPublic)
         {
             User = user;
             Email = email;
             Password = password;
+            IsPublic = isPublic;
         }
     }
 
@@ -28,16 +30,18 @@ namespace HostingLib.Classes
         public string? File { get; set; }
         public string? FileName { get; set; }
         public string? FileDetails { get; set; }
+        public string? IsPublic { get; set; }
         public int UserId { get; set; }
         public string ParentId {  get; set; }
 
-        public FilePayload(string file, string fileName, string fileDetails, int userId, string parentId)
+        public FilePayload(string file, string fileName, string fileDetails, string isPublic, int userId, string parentId)
         {
             File = file;
             FileName = fileName;
             FileDetails = fileDetails;
             UserId = userId;
             ParentId = parentId;
+            IsPublic = isPublic;
         }
     }
 
@@ -47,14 +51,16 @@ namespace HostingLib.Classes
         public string? Folder { get; set; }
         public string? FolderName { get; set; }
         public string? FolderPath { get; set; }
+        public string? IsPublic { get; set; }
         public int UserId { get; set; }
         public string ParentId { get; set; }
 
-        public FolderPayload(string folder, string folderName, string folderPath, int userId, string parentId)
+        public FolderPayload(string folder, string folderName, string folderPath, string isPublic, int userId, string parentId)
         {
             Folder = folder;
             FolderName = folderName;
             FolderPath = folderPath;
+            IsPublic = isPublic;
             UserId = userId;
             ParentId = parentId;
         }
@@ -101,6 +107,7 @@ namespace HostingLib.Classes
         USER_GET,
         USER_AUTHENTICATE,
         USER_UPDATE,
+        USER_UPDATE_PUBLICITY,
         USER_DELETE,
 
         FILE_UPLOAD,
@@ -108,14 +115,17 @@ namespace HostingLib.Classes
         FILE_CREATE,
         FILE_GET,
         FILE_GETALL,
+        FILE_GET_PUBLIC,
         FILE_GET_N,
+        FILE_MOVE,
+        FILE_UPDATE_PUBLICITY,
         FILE_DELETE,
         FILE_ERASE,
-        FILE_MOVE,
 
         FOLDER_CREATE,
         FOLDER_GET,
         FOLDER_MOVE,
+        FOLDER_UPDATE_PUBLICITY,
         FOLDER_DELETE,
         FOLDER_ERASE,
     }
