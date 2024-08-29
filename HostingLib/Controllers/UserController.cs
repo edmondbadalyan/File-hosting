@@ -44,7 +44,7 @@ namespace HostingLib.Controllers
             {
                 token.ThrowIfCancellationRequested();
                 User user = await context.Users.SingleOrDefaultAsync(u => u.Email == email, token);
-                LoggingController.LogInfo($"UserController.GetUser - request with email {email} returned {(user is null ? null : user.Id)}");
+                LoggingController.LogInfo($"UserController.GetUser - request with email {email} returned {(user?.Id)}");
                 return user;
             }
             finally

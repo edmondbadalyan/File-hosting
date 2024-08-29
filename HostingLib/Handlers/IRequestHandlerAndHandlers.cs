@@ -70,7 +70,8 @@ namespace HostingLib.Handlers
                     case Payloads.USER:
                         {
                             string user = null;
-                            string email = null, password = null, isPublic = null;
+                            string email = null, password = null; 
+                            bool isPublic = false;
 
                             appended_request_payload = JsonConvert.DeserializeObject<UserPayload>(appended_request.Payload);
 
@@ -91,7 +92,7 @@ namespace HostingLib.Handlers
 
                             if(appended_request_payload.IsPublic != null)
                             {
-                                isPublic = encryption_controller.DecryptData(appended_request_payload.IsPublic);
+                                isPublic = appended_request_payload.IsPublic;
                             }
 
                             appended_request_payload = new UserPayload(user, email, password, isPublic);
@@ -103,7 +104,8 @@ namespace HostingLib.Handlers
                     case Payloads.FILE:
                         {
                             string file = null, file_name = null;
-                            string file_info = null, isPublic = null;
+                            string file_info = null; 
+                            bool isPublic = false;
                             int user_id = 0;
                             string parent_id = null;
 
@@ -126,7 +128,7 @@ namespace HostingLib.Handlers
 
                             if(appended_request_payload.IsPublic != null)
                             {
-                                isPublic = encryption_controller.DecryptData(appended_request_payload.IsPublic);
+                                isPublic = appended_request_payload.IsPublic;
                             }
 
                             user_id = appended_request_payload.UserId;
@@ -141,7 +143,8 @@ namespace HostingLib.Handlers
                         }
                     case Payloads.FOLDER:
                         {
-                            string folder = null, folder_name = null, folder_path = null, isPublic = null;
+                            string folder = null, folder_name = null, folder_path = null;
+                            bool isPublic = false;
                             int user_id = 0;
                             string parent_id = null;
 
@@ -161,7 +164,7 @@ namespace HostingLib.Handlers
                             }
                             if(appended_request_payload.IsPublic != null)
                             {
-                                isPublic = encryption_controller.DecryptData(appended_request_payload.IsPublic);
+                                isPublic = appended_request_payload.IsPublic;
                             }
 
                             user_id = appended_request_payload.UserId;
@@ -217,8 +220,7 @@ namespace HostingLib.Handlers
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
-                bool publicity = JsonConvert.DeserializeObject<bool>(payload.IsPublic);
-                await UserController.CreateUser(payload.Email, payload.Password, publicity, token);
+                await UserController.CreateUser(payload.Email, payload.Password, payload.IsPublic, token);
                 return new(Responses.Success, Payloads.MESSAGE, $"User created successfully with email {payload.Email}");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -248,6 +250,7 @@ namespace HostingLib.Handlers
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
             }
         }
@@ -301,8 +304,7 @@ namespace HostingLib.Handlers
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
-                bool publicity = JsonConvert.DeserializeObject<bool>(payload.IsPublic);
-                await UserController.UpdateUserPublicity(user, publicity, token);
+                await UserController.UpdateUserPublicity(user, payload.IsPublic, token);
                 return new(Responses.Success, Payloads.MESSAGE, "User publicity updated successfully!");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -349,7 +351,6 @@ namespace HostingLib.Handlers
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 FileDetails info = JsonConvert.DeserializeObject<FileDetails>(payload.FileDetails);
-                bool publicity = JsonConvert.DeserializeObject<bool>(payload.IsPublic);
                 string file_path = Path.Combine(FileController.storage_path, payload.UserId.ToString(), info.Name);
 
                 if (System.IO.File.Exists(file_path))
@@ -371,7 +372,7 @@ namespace HostingLib.Handlers
                     return new Response(Responses.Fail, Payloads.MESSAGE, "Connection was lost during file upload.");
                 }
 
-                await FileController.CreateFile(info, payload.UserId, payload.ParentId != null ? int.Parse(payload.ParentId) : null, publicity, token);
+                await FileController.CreateFile(info, payload.UserId, payload.ParentId != null ? int.Parse(payload.ParentId) : null, payload.IsPublic, token);
 
                 return new Response(Responses.Success, Payloads.MESSAGE, "File uploaded successfully!");
             }
@@ -555,8 +556,7 @@ namespace HostingLib.Handlers
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
-                bool publciity = JsonConvert.DeserializeObject<bool>(payload.IsPublic);
-                await FileController.UpdateFilePublicity(file, publciity, token);
+                await FileController.UpdateFilePublicity(file, payload.IsPublic, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "File publicity updated successfully!");
             }
@@ -630,8 +630,7 @@ namespace HostingLib.Handlers
             {
                 FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
                 int? parent_id = JsonConvert.DeserializeObject<int?>(payload.ParentId);
-                bool publicity = JsonConvert.DeserializeObject<bool>(payload.IsPublic);
-                await FileController.CreateFolder(payload.FolderName, payload.UserId, parent_id, publicity, token);
+                await FileController.CreateFolder(payload.FolderName, payload.UserId, parent_id, payload.IsPublic, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "Folder created successfully!");
             }
@@ -699,8 +698,7 @@ namespace HostingLib.Handlers
             {
                 FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
                 Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.Folder);
-                bool publcity = JsonConvert.DeserializeObject<bool>(payload.IsPublic);
-                await FileController.UpdateFolderPublicity(file, publcity, token);
+                await FileController.UpdateFolderPublicity(file, payload.IsPublic, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "Folder publicity updated successfully!");
             }

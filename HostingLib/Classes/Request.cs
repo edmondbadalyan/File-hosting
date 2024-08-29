@@ -13,9 +13,9 @@ namespace HostingLib.Classes
         public string? User { get; set; }
         public string? Email { get; set; }
         public string? Password { get; set; }
-        public string? IsPublic { get; set; }
+        public bool IsPublic { get; set; }
 
-        public UserPayload(string user, string email, string password, string isPublic)
+        public UserPayload(string user, string email, string password, bool isPublic)
         {
             User = user;
             Email = email;
@@ -30,11 +30,11 @@ namespace HostingLib.Classes
         public string? File { get; set; }
         public string? FileName { get; set; }
         public string? FileDetails { get; set; }
-        public string? IsPublic { get; set; }
+        public bool IsPublic { get; set; }
         public int UserId { get; set; }
         public string ParentId {  get; set; }
 
-        public FilePayload(string file, string fileName, string fileDetails, string isPublic, int userId, string parentId)
+        public FilePayload(string file, string fileName, string fileDetails, bool isPublic, int userId, string parentId)
         {
             File = file;
             FileName = fileName;
@@ -51,11 +51,11 @@ namespace HostingLib.Classes
         public string? Folder { get; set; }
         public string? FolderName { get; set; }
         public string? FolderPath { get; set; }
-        public string? IsPublic { get; set; }
+        public bool IsPublic { get; set; }
         public int UserId { get; set; }
         public string ParentId { get; set; }
 
-        public FolderPayload(string folder, string folderName, string folderPath, string isPublic, int userId, string parentId)
+        public FolderPayload(string folder, string folderName, string folderPath, bool isPublic, int userId, string parentId)
         {
             Folder = folder;
             FolderName = folderName;
