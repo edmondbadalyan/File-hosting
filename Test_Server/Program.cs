@@ -3,6 +3,7 @@ using HostingLib.Helpers;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -23,6 +24,11 @@ CancellationTokenSource cts = new();
 Task deletion_task = Task.Run(async () => await FileDeletionHelper.RunAsync(cts.Token)); 
 
 AppDomain.CurrentDomain.ProcessExit += (s, e) => cts.Cancel();
+
+if (!Directory.Exists(FileController.storage_path))
+{
+    Directory.CreateDirectory(FileController.storage_path);
+}
 
 while (true)
 {

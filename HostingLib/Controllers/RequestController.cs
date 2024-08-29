@@ -83,8 +83,6 @@ namespace HostingLib.Controllers
                 Response response = await HandleRequestAsync<Response>(state, request, token);
                 if(state.Client.Connected)
                 {
-                    LoggingController.LogDebug($"Client {state.Client.Client.RemoteEndPoint} closed connection");
-                    Console.WriteLine($"Client {state.Client.Client.RemoteEndPoint} closed connection");
                     await ResponseController.SendResponseAsync(state.Client, response, token);
                 }
                 if (request.RequestType == Requests.CLOSE_CONNECTION)

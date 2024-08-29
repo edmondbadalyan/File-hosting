@@ -55,20 +55,9 @@ namespace HostingLib.Controllers
         public static async Task DownloadFileAsync(TcpClient client, string? file_path, CancellationToken token)
         {
             using FileStream new_file = System.IO.File.Create(file_path);
-            using HostingDbContext context = new();
             try
             {
                 token.ThrowIfCancellationRequested();
-
-                Data.Entities.File file = await context.Files
-                    .Where(f => f.Path == file_path)
-                    .SingleOrDefaultAsync(token);
-
-                if( file == null)
-                {
-                    LoggingController.LogError($"FileController.DownloadFileAsync - File with path {file_path} not found");
-                    throw new FileNotFoundException("File not found.");
-                }
 
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - Started receiving file");
 

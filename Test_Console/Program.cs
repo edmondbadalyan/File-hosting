@@ -30,15 +30,15 @@ namespace Test_Console
             password = Console.ReadLine();
 
             User received_user = await Client.GetUserAsync(server, email);
-            if(received_user == null)
+            if(received_user != null)
             {
-                await Client.CreateUserAsync(server, email, password, true);
+                await Client.UploadFileAsync(server, @"C:\Users\Роман\Downloads\Screenshot_4.jpg", received_user, null, true);
             }
-            else
-            {
-                User user = await Client.AuthenticateUserAsync(server, received_user, password);
-                Console.WriteLine($"Received and authenticated user {user.Id} {user.Email} {user.Password}");
-            }
+            //else
+            //{
+            //    User user = await Client.AuthenticateUserAsync(server, received_user, password);
+            //    Console.WriteLine($"Received and authenticated user {user.Id} {user.Email} {user.Password}");
+            //}
 
 
             //else

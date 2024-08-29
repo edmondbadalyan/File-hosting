@@ -356,7 +356,7 @@ namespace HostingLib.Handlers
                 if (System.IO.File.Exists(file_path))
                 {
                     LoggingController.LogError($"UploadFileHandler.HandleAsync - Error: file {Path.GetFileName(file_path)} already exists at {file_path}");
-                    throw new ArgumentException($"File {Path.GetFileName(file_path)} already exists at {file_path}");
+                    throw new InvalidOperationException($"File {Path.GetFileName(file_path)} already exists at {file_path}");
                 }
 
                 Response response = new(Responses.Success, Payloads.MESSAGE, "Ready to receive file");
