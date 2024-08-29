@@ -10,11 +10,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TCPLib", "TCPLib\TCPLib.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_Server", "Test_Server\Test_Server.csproj", "{AC384F87-ABE0-449F-BE81-DD0985BF2602}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csproj", "{2AEF66DC-0819-4D9D-841E-E77D730D2E06}"
-	ProjectSection(ProjectDependencies) = postProject
-		{438D84FB-47B5-4E8C-9029-FFE2E0E5BF76} = {438D84FB-47B5-4E8C-9029-FFE2E0E5BF76}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,10 +32,6 @@ Global
 		{AC384F87-ABE0-449F-BE81-DD0985BF2602}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC384F87-ABE0-449F-BE81-DD0985BF2602}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC384F87-ABE0-449F-BE81-DD0985BF2602}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2AEF66DC-0819-4D9D-841E-E77D730D2E06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2AEF66DC-0819-4D9D-841E-E77D730D2E06}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2AEF66DC-0819-4D9D-841E-E77D730D2E06}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2AEF66DC-0819-4D9D-841E-E77D730D2E06}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
