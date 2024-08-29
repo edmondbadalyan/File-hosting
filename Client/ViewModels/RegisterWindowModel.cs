@@ -21,17 +21,25 @@ namespace Client
             set => SetProperty(ref agreeWithTerms, value);
         }
 
+        private bool isPublic = false;
+        public bool IsPublic {
+            get => isPublic;
+            set => SetProperty(ref isPublic, value);
+        }
+
         public string Terms { get; set; }
 
-        public RegisterWindowModel(string email, bool agreeWithTerms, string terms) {
+        public RegisterWindowModel(string email, bool agreeWithTerms, bool isPublic, string terms) {
             Email = email;
             AgreeWithTerms = agreeWithTerms;
+            IsPublic = isPublic;
             Terms = terms;
         }
 
         public RegisterWindowModel() {
             Email = string.Empty;
             AgreeWithTerms = false;
+            IsPublic = false;
             Terms = "For now nothing";
         }
     }

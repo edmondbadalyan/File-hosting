@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
     /// <summary>
@@ -29,7 +30,7 @@ namespace Client {
         }
 
         private async void Button_Create(object sender, RoutedEventArgs e) {
-            // отправка запроса на создание папки
+            await Task.Run(async () => await ClientCommands.CreateFolderAsync(mainWindow.Server, Model.FolderName, Model.User, Model.ParentFolder, Model.IsPublic));
         }
     }
 }

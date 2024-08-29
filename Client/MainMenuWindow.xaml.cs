@@ -51,22 +51,25 @@ namespace Client {
 
         private async void Button_Upload(object sender, RoutedEventArgs e) {
             List<string> fileNames = new List<string>();
+            bool isPublic = false;
             OpenFileDialog fileDialog = new OpenFileDialog();
             if (fileDialog.ShowDialog() == true) {
                 fileNames = fileDialog.FileNames.ToList();
             }
+            if (System.Windows.Forms.MessageBox.Show("Are files public?", "Are files public?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                isPublic = true;
 
             File? whereto = Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId);
             if (whereto is null) return;
             foreach (string file in fileNames) {
-                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User, whereto));
+                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User, whereto, isPublic));
             }
 
             await Model.Update();
         }
 
         private void Button_Create(object sender, RoutedEventArgs e) {
-            CreateWindow window = new CreateWindow(mainWindow, new(Model.Search));
+            CreateWindow window = new CreateWindow(mainWindow, new(Model.AllFiles.First(File => File.Id == Model.SelectedFolderId), Model.User));
             window.ShowDialog();
         }
 
@@ -80,11 +83,11 @@ namespace Client {
         }
 
         private async void Button_DeletedFiles(object sender, RoutedEventArgs e) {
-            //Model.Files = Model.AllFiles.Where(File => File.IsDeleted)
+            await Task.Run (() => Model.Files = Model.AllFiles.Where(File => File.IsDeleted).Select((File) => new FileModel(File)).ToList());
         }
 
         private void Button_Settings(object sender, RoutedEventArgs e) {
-            SettingsWindow window = new SettingsWindow(mainWindow);
+            SettingsWindow window = new SettingsWindow(mainWindow, new (Model.User));
             window.ShowDialog();
         }
 
@@ -116,6 +119,23 @@ namespace Client {
             await Model.Update();
         }
 
+        private void Button_Others(object sender, RoutedEventArgs e) {
+            // окно с отображением публичных файлов других пользователей
+        }
+
+        private async void Button_Back(object sender, RoutedEventArgs e) {
+            int? id = Model.AllFiles.First(File => File.Id == Model.SelectedFolderId).ParentId;
+            if (id.HasValue) Model.SelectedFolderId = id.Value;
+            else Model.SelectedFolderId = null;
+            await Model.Update();
+        }
+
+        private async void Button_Root(object sender, RoutedEventArgs e) {
+            Model.SelectedFolderId = null;
+            await Model.Update();
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => mainWindow.GoBack(this);
+
     }
 }

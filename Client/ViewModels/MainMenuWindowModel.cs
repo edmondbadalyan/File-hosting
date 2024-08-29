@@ -36,8 +36,8 @@ namespace Client {
             set => SetProperty(ref search, value);
         }
 
-        private int selectedFolderId;
-        public int SelectedFolderId {
+        private int? selectedFolderId;
+        public int? SelectedFolderId {
             get => selectedFolderId;
             set => SetProperty(ref selectedFolderId, value);
         }
@@ -57,11 +57,11 @@ namespace Client {
             AllFiles = new List<File>();
             Task.Run(() => Update());
             Search = "";
-            SelectedFolderId = -1;
+            SelectedFolderId = null;
         }
 
         public async Task Update() {
-            AllFiles = (List<File>) await Task.Run(async () => await ClientCommands.GetAllFilesAsync(Client, User)); // Тут будет команда на получение вообще всех файлов
+            AllFiles = (List<File>) await Task.Run(async () => await ClientCommands.GetAllFilesAsync(Client, User));
             Files = AllFiles.Where(File => File.ParentId == SelectedFolderId).Select((File) => new FileModel(File)).ToList();
         }
     }

@@ -15,6 +15,7 @@ namespace Client
         public DateTime LastChangeDate { get; set; }
         public string Weight { get; set; }
         public string Extension { get; set; }
+        public bool IsPublic { get; set; }
 
         public FileModel(File file) {
             File = file;
@@ -22,6 +23,7 @@ namespace Client
 
             LastChangeDate = File.ChangeDate;
             Weight = Utilities.FormatBytes(File.Size);
+            IsPublic = File.IsPublic;
 
             if (File.Path.EndsWith("\\")) {
                 Extension = "";

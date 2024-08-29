@@ -26,8 +26,8 @@ namespace Client {
         }
 
         private async void Button_Send(object sender, RoutedEventArgs e) {
-            if (Utilities.ValidateEmail(Model.Email) && Utilities.ValidatePassword(PasswordBox)) {
-                await Task.Run(async () => await ClientCommands.CreateUserAsync(mainWindow.Server, Model.Email, PasswordBox.Password));
+            if (Utilities.ValidateEmail(Model.Email) && Utilities.ValidatePassword(PasswordBox) && Model.AgreeWithTerms) {
+                await Task.Run(async () => await ClientCommands.CreateUserAsync(mainWindow.Server, Model.Email, PasswordBox.Password, Model.IsPublic));
 
                 EmailCheckWindow window = new EmailCheckWindow(mainWindow, this, new(Model.Email));
                 this.Visibility = Visibility.Hidden;

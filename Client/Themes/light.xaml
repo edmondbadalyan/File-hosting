@@ -43,6 +43,10 @@
         <Setter Property="Foreground" Value="#00AACC"/>
         <Setter Property="Background" Value="LightGray"/>
     </Style>
+    <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
+        <Setter Property="Foreground" Value="#00AACC"/>
+        <Setter Property="Background" Value="LightGray"/>
+    </Style>
 
     <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type FrameworkElement}}">
         <Setter Property="Background" Value="LightGray"/>
