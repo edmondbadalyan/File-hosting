@@ -13,10 +13,20 @@ namespace HostingLib.Controllers
 {
     public class UserController
     {
-        private readonly static long user_quota = 16_106_127_360; //15 Гб
+        private static readonly long user_quota = 16_106_127_360; //15 Гб
+        public static readonly string cache_prefix = "User:";
 
         public static async Task<long> GetAvailableSpace(int user_id, CancellationToken token)
         {
+            string cache_key = $"{cache_prefix}space:{user_id}";
+
+            long? cached_space = await CachedDataController.GetValueAsync<long>(cache_key);
+            if (cached_space != null)
+            {
+                LoggingController.LogInfo($"UserController.AvailableSpace - Request for user {user_id} returned {cached_space} from cache");
+                return (long)cached_space;
+            }
+
             HostingDbContext context = new();
 
             try
@@ -28,7 +38,8 @@ namespace HostingLib.Controllers
                     .SumAsync(f => f.Size, token);
 
 
-                LoggingController.LogInfo($"UserController.AvailableSpace - request for user {user_id} retuned {user_quota - used_space}");
+                LoggingController.LogInfo($"UserController.AvailableSpace - Request for user {user_id} returned {user_quota - used_space}");
+                await CachedDataController.SetValueAsync(cache_key, user_quota - used_space);
                 return user_quota - used_space;
             }
             finally

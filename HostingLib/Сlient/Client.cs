@@ -260,7 +260,7 @@ namespace HostingLib.Сlient
             {
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                FilePayload payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(file)), null, null, false, user.Id, null);
+                FilePayload payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(file)), null, null, false, user.Id, file.ParentId.ToString());
                 Request request = new(Requests.FILE_DOWNLOAD, Payloads.FILE, JsonConvert.SerializeObject(payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request, cts.Token);
@@ -271,7 +271,7 @@ namespace HostingLib.Сlient
                 }
                 else
                 {
-                    await FileController.DownloadFileAsync(server, to_file_path, cts.Token);
+                    await FileController.DownloadFileAsync(server, to_file_path, user.Id, null, cts.Token);
                     response = await ResponseController.ReceiveResponseAsync(server, cts.Token);
                     Console.WriteLine(response.Payload);
                 }

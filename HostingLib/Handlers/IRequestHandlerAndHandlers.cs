@@ -364,7 +364,7 @@ namespace HostingLib.Handlers
 
                 try
                 {
-                    await FileController.DownloadFileAsync(state.Client, file_path, token);
+                    await FileController.DownloadFileAsync(state.Client, file_path, payload.UserId, payload.ParentId != null ? int.Parse(payload.ParentId) : null, token);
                 }
                 catch (Exception ex) when (ex is IOException || ex is SocketException)
                 {

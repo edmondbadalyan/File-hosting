@@ -20,7 +20,8 @@ namespace HostingLib.Controllers
 {
     public class FileController
     {
-        public readonly static string storage_path = @"../../../Files";
+        public static readonly string storage_path = @"../../../Files";
+        public static readonly string cache_prefix = "Files:";
 
         #region File
 
@@ -52,7 +53,7 @@ namespace HostingLib.Controllers
             }
         }
 
-        public static async Task DownloadFileAsync(TcpClient client, string? file_path, CancellationToken token)
+        public static async Task DownloadFileAsync(TcpClient client, string? file_path, int user_id, int? parent_id, CancellationToken token)
         {
             using FileStream new_file = System.IO.File.Create(file_path);
             try
@@ -63,6 +64,12 @@ namespace HostingLib.Controllers
 
                 await TCP.ReceiveFile(client, new_file, token);
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - File received successfully");
+
+                await CachedDataController.RemoveCacheAsync($"{UserController.cache_prefix}space:{user_id}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{user_id}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{user_id}:{parent_id}");
+
+                LoggingController.LogDebug($"FileController.DownloadFileAsync - Cleaned up cache");
             }
             catch (OperationCanceledException)
             {
@@ -93,6 +100,10 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.CreateFile - file {file.Name} created successfully with path {file.Path} belonging to user {user_id}");
+
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{user_id}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{user_id}:{parent_id}");
+                LoggingController.LogDebug($"FileController.CreateFile - Cleaned up cache");
             }
             catch (Exception ex)
             {
@@ -134,6 +145,15 @@ namespace HostingLib.Controllers
 
         public static async Task<IList<HostingLib.Data.Entities.File>> GetAllFiles(int user_id, CancellationToken token)
         {
+            string cache_key = $"{cache_prefix}all:{user_id}";
+
+            IList<Data.Entities.File> cached_files = await CachedDataController.GetValueAsync<IList<Data.Entities.File>>(cache_key);
+            if(cached_files != null)
+            {
+                LoggingController.LogInfo($"FileController.GetAllFiles - Retrieved {cached_files.Count} files for user {user_id} from cache.");
+                return cached_files;
+            }
+
             using HostingDbContext context = new();
             try
             {
@@ -144,6 +164,9 @@ namespace HostingLib.Controllers
                     .ToListAsync(token);
 
                 LoggingController.LogInfo($"FileController.GetAllFiles - Found {files.Count} files for user {user_id}");
+
+                await CachedDataController.SetValueAsync(cache_key, files, TimeSpan.FromHours(1));
+
                 return files;
             }
             finally
@@ -154,6 +177,15 @@ namespace HostingLib.Controllers
 
         public static async Task<IList<HostingLib.Data.Entities.File>> GetPublicFiles(int user_id, int? parent_id, CancellationToken token)
         {
+            string cache_key = $"{cache_prefix}public:{user_id}";
+
+            IList<Data.Entities.File> cached_files = await CachedDataController.GetValueAsync<IList<Data.Entities.File>>(cache_key);
+            if (cached_files != null)
+            {
+                LoggingController.LogInfo($"FileController.GetPubliclFiles - Retrieved {cached_files.Count} files for user {user_id} from cache.");
+                return cached_files;
+            }
+
             using HostingDbContext context = new();
             try
             {
@@ -164,6 +196,7 @@ namespace HostingLib.Controllers
                     .ToListAsync(token);
 
                 LoggingController.LogInfo($"FileController.GetPublicFiles - Found {files.Count} files for user {user_id}");
+                await CachedDataController.SetValueAsync(cache_key, files, TimeSpan.FromHours(1));
                 return files;
             }
             finally
@@ -174,6 +207,15 @@ namespace HostingLib.Controllers
 
         public static async Task<IList<HostingLib.Data.Entities.File>> GetFiles(int user_id, int? parent_id, CancellationToken token)
         {
+            string cache_key = $"{cache_prefix}{user_id}:{parent_id}";
+
+            IList<Data.Entities.File> cached_files = await CachedDataController.GetValueAsync<IList<Data.Entities.File>>(cache_key);
+            if (cached_files != null)
+            {
+                LoggingController.LogInfo($"FileController.GetFiles - Retrieved {cached_files.Count} files for user {user_id} from cache.");
+                return cached_files;
+            }
+
             using HostingDbContext context = new();
             try
             {
@@ -184,6 +226,7 @@ namespace HostingLib.Controllers
                     .ToListAsync(token);
 
                 LoggingController.LogInfo($"FileController.GetFiles - Found {files.Count} files for user {user_id} in parent folder {parent_id}");
+                await CachedDataController.SetValueAsync(cache_key, files, TimeSpan.FromHours(1));
                 return files;
             }
             finally
@@ -198,16 +241,29 @@ namespace HostingLib.Controllers
             try
             {
                 token.ThrowIfCancellationRequested();
+
+                Data.Entities.File new_folder = await context.Files
+                    .SingleOrDefaultAsync(f => f.Path == folder_to, token);
+
+                if(new_folder == null)
+                {
+                    throw new InvalidOperationException("There is no such folder!");
+                }
+
                 string new_path = Path.Combine(folder_to, file.Name);
 
                 LoggingController.LogDebug($"FileController.MoveFile - Moving file {file.Name} from {file.Path} to {new_path}");
                 System.IO.File.Move(file.Path, new_path);
                 file.Path = new_path;
+                file.ParentId = new_folder.Id;
 
                 context.Files.Update(file);
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.MoveFile - File {file.Id} {file.Name} moved successfully to {new_path}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{file.UserId}:{file.ParentId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{file.UserId}:{new_folder.ParentId}");
+                LoggingController.LogDebug($"FileController.MoveFile - Cleaned up cache");
             }
             finally
             {
@@ -229,6 +285,9 @@ namespace HostingLib.Controllers
 
                 Console.WriteLine($"File {file.Id} {file.Name} publicity updated");
                 LoggingController.LogInfo($"FileController.UpdatePublicity - File {file.Id} {file.Name} publicity updated");
+
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}public:{file.UserId}");
+                LoggingController.LogDebug($"FileController.UpdateFilePublicity - Cleaned up cache");
             }
             finally
             {
@@ -255,6 +314,10 @@ namespace HostingLib.Controllers
                 await CachedDataController.ScheduleFileDeletionAsync(file.Id.ToString(), TimeSpan.FromSeconds(30));
 
                 LoggingController.LogInfo($"FileController.DeleteFile - File {file.Id} {file.Name} marked as deleted and moved to {new_path}");
+
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{file.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{file.UserId}:{file.ParentId}");
+                LoggingController.LogDebug($"FileController.DeleteFile - Cleaned up cache");
             }
             finally
             {
@@ -275,6 +338,11 @@ namespace HostingLib.Controllers
 
                 System.IO.File.Delete(file.Path);
                 LoggingController.LogInfo($"FileController.EraseFile - File {file.Id} {file.Name} erased successfully");
+
+                await CachedDataController.RemoveCacheAsync($"{UserController.cache_prefix}space:{file.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{file.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{file.UserId}:{file.ParentId}");
+                LoggingController.LogDebug($"FileController.EraseFile - Cleaned up cache");
             }
             finally
             {
@@ -299,6 +367,11 @@ namespace HostingLib.Controllers
 
                 System.IO.File.Delete(file.Path);
                 LoggingController.LogInfo($"FileController.EraseFile - File {file.Id} {file.Name} erased successfully");
+
+                await CachedDataController.RemoveCacheAsync($"{UserController.cache_prefix}space:{file.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{file.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{file.UserId}:{file.ParentId}");
+                LoggingController.LogDebug($"FileController.EraseFile - Cleaned up cache");
             }
             finally
             {
@@ -322,7 +395,7 @@ namespace HostingLib.Controllers
 
                 if (Directory.Exists(folder_path))
                 {
-                    LoggingController.LogError($"FileController.CreateFolder - error: folder {folder_name} already exists at {folder_path}");
+                    LoggingController.LogError($"FileController.CreateFolder - Error: folder {folder_name} already exists at {folder_path}");
                     throw new ArgumentException("Such folder already exists!");
                 }
 
@@ -332,6 +405,10 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.CreateFolder - folder {folder_name} created successfully at {folder_path} for user {user_id}");
+
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{user_id}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{user_id}:{parent_id}");
+                LoggingController.LogDebug($"FileController.CreateFolder - Cleaned up cache");
             }
             catch (OperationCanceledException)
             {
@@ -383,6 +460,14 @@ namespace HostingLib.Controllers
                 context.Files.Include(f => f.Children);
                 string new_folder_path = Path.Combine(folder_to, folder.Name);
 
+                Data.Entities.File new_folder = await context.Files
+                   .SingleOrDefaultAsync(f => f.Path == folder_to, token);
+
+                if (new_folder == null)
+                {
+                    throw new InvalidOperationException("There is no such folder!");
+                }
+
                 LoggingController.LogDebug($"FileController.MoveFolder - moving folder {folder.Name} to {new_folder_path}");
                 Directory.Move(folder.Path, new_folder_path);
                 folder.Path = new_folder_path;
@@ -391,14 +476,21 @@ namespace HostingLib.Controllers
                 {
                     string new_path = Path.Combine(new_folder_path, file.Name);
                     file.Path = new_path;
+                    await CachedDataController.RemoveCacheAsync($"{cache_prefix}{file.UserId}:{file.ParentId}");
                     context.Update(file);
                     LoggingController.LogInfo($"FileController.MoveFolder - file {file.Id} {file.Name} moved to {new_path}");
+                    await CachedDataController.RemoveCacheAsync($"{cache_prefix}{file.UserId}:{new_folder.ParentId}");
+                    LoggingController.LogDebug($"FileController.MoveFolder - Cleaned up cache for file {file.Id}");
                 }
+
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{folder.UserId}:{folder.ParentId}");
 
                 context.Update(folder);
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.MoveFolder - folder {folder.Name} moved successfully to {new_folder_path}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{folder.UserId}:{new_folder.ParentId}");
+                LoggingController.LogDebug($"FileController.MoveFolder - Cleaned up cache for folder");
             }
             finally
             {
@@ -422,6 +514,9 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.UpdateFolderPublicity - folder {folder.Name} publicity updated");
+
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}public:{folder.UserId}");
+                LoggingController.LogDebug($"FileController.UpdateFolderPublicity - Cleaned up cache");
             }
             finally
             {
@@ -472,6 +567,10 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.DeleteFolder - folder {folder.Name} moved to deleted successfully");
+
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{folder.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{folder.UserId}:{folder.ParentId}");
+                LoggingController.LogDebug($"FileController.DeleteFolder - Cleaned up cache");
             }
             finally
             {
@@ -501,6 +600,11 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.EraseFolder - folder {folder.Name} and its files erased successfully");
+
+                await CachedDataController.RemoveCacheAsync($"{UserController.cache_prefix}space:{folder.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{folder.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{folder.UserId} : {folder.ParentId}");
+                LoggingController.LogDebug($"FileController.EraseFolder - Cleaned up cache");
             }
             finally
             {
@@ -535,6 +639,11 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.EraseFolder - folder {folder.Name} and its files erased successfully");
+
+                await CachedDataController.RemoveCacheAsync($"{UserController.cache_prefix}space:{folder.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{folder.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{cache_prefix}{folder.UserId} : {folder.ParentId}");
+                LoggingController.LogDebug($"FileController.EraseFolder - Cleaned up cache");
             }
             finally
             {

@@ -22,7 +22,7 @@ namespace Test_Console
         static async Task Main(string[] args)
         {
             TcpClient server;
-            server = new("lunarhosting.ddns.net", 8080);
+            server = new("192.168.0.10", 2024);
 
             string email, password;
             Console.WriteLine("Input email and password!");
@@ -32,7 +32,11 @@ namespace Test_Console
             User received_user = await Client.GetUserAsync(server, email);
             if(received_user != null)
             {
-                await Client.UploadFileAsync(server, @"C:\Users\Роман\Downloads\Screenshot_4.jpg", received_user, null, true);
+                var list = await Client.GetAllFilesAsync(server, received_user);
+                foreach( var file in list)
+                {
+                    Console.WriteLine($"{file.Name} {file.Size} {file.ChangeDate}");
+                }
             }
             //else
             //{
