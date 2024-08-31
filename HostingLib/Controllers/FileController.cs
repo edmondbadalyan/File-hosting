@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -457,7 +458,7 @@ namespace HostingLib.Controllers
             {
                 token.ThrowIfCancellationRequested();
 
-                context.Files.Include(f => f.Children);
+                await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
                 string new_folder_path = Path.Combine(folder_to, folder.Name);
 
                 Data.Entities.File new_folder = await context.Files
@@ -505,7 +506,7 @@ namespace HostingLib.Controllers
             {
                 token.ThrowIfCancellationRequested();
 
-                context.Files.Include(f => f.Children);
+                await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
 
                 folder.IsPublic = publicity;
 
@@ -548,20 +549,15 @@ namespace HostingLib.Controllers
             {
                 token.ThrowIfCancellationRequested();
 
-                context.Files.Include(f => f.Children);
+                await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
                 string new_folder_path = Path.Combine(storage_path, "Deleted", folder.Name);
 
                 LoggingController.LogDebug($"FileController.DeleteFolder - moving folder {folder.Name} to {new_folder_path}");
                 Directory.Move(folder.Path, new_folder_path);
                 folder.Path = new_folder_path;
+                folder.IsDeleted = true;
 
-                foreach (Data.Entities.File file in folder.Children)
-                {
-                    string new_path = Path.Combine(new_folder_path, file.Name);
-                    file.Path = new_path;
-                    context.Update(file);
-                    LoggingController.LogInfo($"FileController.DeleteFolder - file {file.Id} {file.Name} marked as deleted and moved to {new_path}");
-                }
+                await DeleteChildren(folder.Children, new_folder_path, context, token);
 
                 context.Update(folder);
                 await context.SaveChangesAsync(token);
@@ -577,6 +573,27 @@ namespace HostingLib.Controllers
                 await context.DisposeAsync();
             }
         }
+        public static async Task DeleteChildren(ICollection<Data.Entities.File> children, string path, HostingDbContext context, CancellationToken token)
+        {
+            foreach (Data.Entities.File child in children)
+            {
+                token.ThrowIfCancellationRequested();
+
+                string new_path = Path.Combine(path, child.Name);
+                child.IsDeleted = true;
+                Directory.Move(child.Path, new_path);
+                child.Path = new_path;
+                context.Files.Update(child);
+
+                LoggingController.LogInfo($"FileController.DeleteChildren - file {child.Id} {child.Name} marked as deleted and moved to {child.Path}");
+
+                if (child.IsDirectory)
+                {
+                    await context.Entry(child).Collection(f => f.Children).LoadAsync(token);
+                    await DeleteChildren(child.Children, child.Path, context, token);
+                }
+            }
+        }
 
         public static async Task EraseFolder(Data.Entities.File folder, CancellationToken token)
         {
@@ -585,21 +602,25 @@ namespace HostingLib.Controllers
             {
                 token.ThrowIfCancellationRequested();
 
-                context.Files.Include(f => f.Children);
+                await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
                 LoggingController.LogDebug($"FileController.EraseFolder - erasing folder {folder.Name} at {folder.Path}");
 
-                Directory.Delete(folder.Path, true);
-
-                foreach (Data.Entities.File file in folder.Children)
+                try
                 {
-                    context.Files.Remove(file);
-                    LoggingController.LogInfo($"FileController.EraseFolder - file {file.Id} {file.Name} erased");
+                    Directory.Delete(folder.Path, true);
                 }
+                catch (Exception ex) when (ex is DirectoryNotFoundException || ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    LoggingController.LogError($"FileController.EraseFolder - Failed to delete folder from file system: {ex.Message}");
+                    throw;
+                }
+
+                await EraseChildren(folder.Children, context, token);
 
                 context.Files.Remove(folder);
                 await context.SaveChangesAsync(token);
 
-                LoggingController.LogInfo($"FileController.EraseFolder - folder {folder.Name} and its files erased successfully");
+                LoggingController.LogInfo($"FileController.EraseFolder - folder {folder.Name} and its children erased successfully");
 
                 await CachedDataController.RemoveCacheAsync($"{UserController.cache_prefix}space:{folder.UserId}");
                 await CachedDataController.RemoveCacheAsync($"{cache_prefix}all:{folder.UserId}");
@@ -609,6 +630,26 @@ namespace HostingLib.Controllers
             finally
             {
                 await context.DisposeAsync();
+            }
+        }
+        public static async Task EraseChildren(ICollection<Data.Entities.File> children, HostingDbContext context, CancellationToken token)
+        {
+            foreach (Data.Entities.File child in children)
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (child.IsDirectory)
+                {
+                    await context.Entry(child).Collection(f => f.Children).LoadAsync(token);
+                    await EraseChildren(child.Children, context, token);
+                    context.Files.Remove(child);
+                    LoggingController.LogInfo($"FileController.EraseChildren - Folder {child.Name} {child.Path} erased");
+                }
+                else
+                {
+                    context.Files.Remove(child);
+                    LoggingController.LogInfo($"FileController.EraseChildren - File {child.Name} {child.Path} erased");
+                }
             }
         }
 

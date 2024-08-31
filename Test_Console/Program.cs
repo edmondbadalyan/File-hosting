@@ -22,7 +22,7 @@ namespace Test_Console
         static async Task Main(string[] args)
         {
             TcpClient server;
-            server = new("192.168.0.10", 2024);
+            server = new("lunarhosting.ddns.net", 8080);
 
             string email, password;
             Console.WriteLine("Input email and password!");
