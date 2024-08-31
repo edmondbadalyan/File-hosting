@@ -176,7 +176,7 @@ namespace HostingLib.Controllers
             }
         }
 
-        public static async Task<IList<HostingLib.Data.Entities.File>> GetPublicFiles(int user_id, int? parent_id, CancellationToken token)
+        public static async Task<IList<HostingLib.Data.Entities.File>> GetPublicFiles(int user_id, CancellationToken token)
         {
             string cache_key = $"{cache_prefix}public:{user_id}";
 
@@ -193,7 +193,7 @@ namespace HostingLib.Controllers
                 token.ThrowIfCancellationRequested();
                 LoggingController.LogDebug($"FileController.GetPublicFiles - Fetching all public files for user {user_id}");
                 IList<HostingLib.Data.Entities.File> files = await context.Files
-                    .Where(f => f.UserId == user_id && f.ParentId == parent_id && f.IsPublic && !f.IsDirectory)
+                    .Where(f => f.UserId == user_id && f.IsPublic && !f.IsDirectory)
                     .ToListAsync(token);
 
                 LoggingController.LogInfo($"FileController.GetPublicFiles - Found {files.Count} files for user {user_id}");
