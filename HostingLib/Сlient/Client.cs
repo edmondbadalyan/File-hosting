@@ -330,7 +330,7 @@ namespace HostingLib.Сlient
             }
         }
 
-        public static async Task<IList<Data.Entities.File>> GetPublicFilesAsync(TcpClient server, User user, Data.Entities.File parent)
+        public static async Task<IList<Data.Entities.File>> GetPublicFilesAsync(TcpClient server, User user)
         {
             CancellationTokenSource cts = new();
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
@@ -339,7 +339,7 @@ namespace HostingLib.Сlient
             {
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                FilePayload payload = new(null, null, null, false, user.Id, parent.Id.ToString());
+                FilePayload payload = new(null, null, null, false, user.Id, null);
                 Request request = new(Requests.FILE_GET_PUBLIC, Payloads.FILE, JsonConvert.SerializeObject(payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request, cts.Token);

@@ -475,6 +475,31 @@ namespace HostingLib.Handlers
         }
     }
 
+    public class GetPublicFilesHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
+        {
+            try
+            {
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+
+                IList<Data.Entities.File> files = await FileController.GetPublicFiles(payload.UserId, token);
+
+                Console.WriteLine($"Found {files.Count} public files for user {payload.UserId}");
+
+                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
     public class GetFilesHandler : IRequestHandler<Response>
     {
         public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
@@ -500,30 +525,6 @@ namespace HostingLib.Handlers
         }
     }
 
-    public class GetPublicFilesHandler : IRequestHandler<Response>
-    {
-        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
-        {
-            try
-            {
-                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
-
-                IList<Data.Entities.File> files = await FileController.GetPublicFiles(payload.UserId, payload.ParentId != null ? int.Parse(payload.ParentId) : null, token);
-
-                Console.WriteLine($"Found {files.Count} public files for user {payload.UserId}");
-
-                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
-            }
-            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
-            {
-                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
-            }
-            catch (Exception ex)
-            {
-                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
-            }
-        }
-    }
 
     public class MoveFileHandler : IRequestHandler<Response>
     {
