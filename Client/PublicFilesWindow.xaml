@@ -1,28 +1,29 @@
-﻿<Window x:Class="Client.MainMenuWindow"
+﻿<Window x:Class="Client.PublicFilesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
-        mc:Ignorable="d"
+        mc:Ignorable="d"        
         WindowState="Maximized"
-        Title="Главное меню" Height="800" Width="1200"
+        Title="Публичные файлы" Height="800" Width="1200"
         Closing="Window_Closing">
     <DockPanel>
         <DockPanel DockPanel.Dock="Left">
             <Button DockPanel.Dock="Top"
                     Padding="0"
                     Margin="10 30" FontSize="30"
-                    Click="Button_Exit">Выйти</Button>
+                    Click="Button_Exit">В главное меню</Button>
+            <GroupBox Header="Поиск пользователя (email)" DockPanel.Dock="Top">
+                <DockPanel>
+                    <Button Margin="10 30" DockPanel.Dock="Right"
+                Click="Button_UserSearch">Найти</Button>
+                    <TextBox Margin="10 30" Text="{Binding UserSearch}"></TextBox>
+                </DockPanel>
+            </GroupBox>
             <StackPanel Margin="10 10">
-                <Button Margin="0 5" Click="Button_Download">Скачать</Button>
-                <Button Margin="0 5" Click="Button_Upload">Загрузить</Button>
-                <Button Margin="0 5" Click="Button_Create">Создать папку</Button>
-                <Button Margin="0 5" Click="Button_Delete">Удалить</Button>
-                <Button Margin="0 5" Click="Button_DeletedFiles">Удалённые файлы</Button>
-                <Button Margin="0 5" Click="Button_Settings">Настройки</Button>
-                <Button Margin="0 30 0 10" FontSize="30" Click="Button_Open">Открыть</Button>
-                <Button Margin="0 10 0 30" FontSize="25" Click="Button_Others">Публичные файлы</Button>
+                <Button Margin="0 10 0 10" FontSize="30" Click="Button_Download">Скачать</Button>
+                <Button Margin="0 10 0 10" FontSize="30" Click="Button_Open">Открыть</Button>
             </StackPanel>
         </DockPanel>
         <DockPanel>
@@ -35,10 +36,9 @@
                     <DockPanel>
                         <Button Margin="10 30" DockPanel.Dock="Right"
                                 Click="Button_Search">Найти</Button>
-                        <!--SelectedItem="{Binding Search}"-->
                         <ComboBox ItemsSource="{Binding AllFilesString}" Margin="10 30" Text="{Binding Search}"></ComboBox>
                     </DockPanel>
-                </GroupBox>                
+                </GroupBox>
             </DockPanel>
 
             <DataGrid ItemsSource="{Binding Files}" Margin="10"
@@ -68,21 +68,9 @@
 
                     <DataGridTextColumn Header="Вес файла"
                                 Binding="{Binding Weight}"></DataGridTextColumn>
-
-                    <DataGridCheckBoxColumn Header="Публичный"
-                                Binding="{Binding IsPublic}"
-                                ElementStyle="{DynamicResource SliderCheckBox}">
-                        <DataGridCheckBoxColumn.CellStyle>
-                            <Style>
-                                <EventSetter Event="CheckBox.Checked"
-                                             Handler="Public_OnChecked"/>
-                                <EventSetter Event="CheckBox.Unchecked"
-                                             Handler="Public_OnUnchecked"/>
-                            </Style>
-                        </DataGridCheckBoxColumn.CellStyle>
-                    </DataGridCheckBoxColumn>
-                </DataGrid.Columns> 
+                </DataGrid.Columns>
             </DataGrid>
         </DockPanel>
     </DockPanel>
 </Window>
+

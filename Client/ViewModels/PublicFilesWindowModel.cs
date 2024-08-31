@@ -2,8 +2,8 @@
 using System.Net.Sockets;
 using ClientCommands = HostingLib.Сlient.Client;
 
-namespace Client {
-    public class MainMenuWindowModel : BindableBase{
+namespace Client.ViewModels {
+    public class PublicFilesWindowModel : BindableBase {
         public User User { get; set; }
         public TcpClient Client { get; set; }
 
@@ -29,34 +29,34 @@ namespace Client {
             set => SetProperty(ref search, value);
         }
 
+        private string userSearch;
+        public string UserSearch {
+            get => userSearch;
+            set => SetProperty(ref userSearch, value);
+        }
+        public User FoundUser;
+
         private int? selectedFolderId;
         public int? SelectedFolderId {
             get => selectedFolderId;
-            set {
-                Task.Run(() =>UpdatePublicity());
-                SetProperty(ref selectedFolderId, value);
-            }
+            set => SetProperty(ref selectedFolderId, value);
         }
 
-        public MainMenuWindowModel(User user, TcpClient client) {
+        public PublicFilesWindowModel(User user, TcpClient client) {
             User = user;
             Client = client;
             Files = new List<FileModel>();
             AllFiles = new List<File>();
             Task.Run(() => Update());
             Search = "";
+            UserSearch = "";
+            FoundUser = null;
             SelectedFolderId = null;
         }
 
         public async Task Update() {
-            await UpdatePublicity();
-            AllFiles = (List<File>) await Task.Run(async () => await ClientCommands.GetAllFilesAsync(Client, User));
+            AllFiles = (List<File>)await Task.Run(async () => await ClientCommands.GetPublicFilesAsync(Client, FoundUser));
             Files = AllFiles.Where(File => File.ParentId == SelectedFolderId).Select((File) => new FileModel(File)).ToList();
-        }
-
-        public async Task UpdatePublicity() {
-            foreach (FileModel file in Files)
-                await Task.Run(async () => await ClientCommands.UpdateFilePublicity(Client, file.File, file.IsPublic));
         }
     }
 }

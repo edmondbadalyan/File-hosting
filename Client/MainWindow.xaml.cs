@@ -1,14 +1,6 @@
 ﻿using System.Net.Sockets;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
     /// <summary>
@@ -42,10 +34,10 @@ namespace Client {
             else if (register is not null && register != window) register.Close();
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             if (login is not null) login.Close();
             else if (register is not null) register.Close();
-            Server.Dispose();
+            await Task.Run(async () => await ClientCommands.CloseConnectionAsync(Server));
         }
     }
 }

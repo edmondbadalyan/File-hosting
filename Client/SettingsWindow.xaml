@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
+        Closing="Window_Closing"
         Title="Настройки" Height="300" Width="350">
     <StackPanel>
         <GroupBox Header="Выбрать тему">
@@ -59,6 +60,21 @@
                     </Button.Template>
                 </Button>
             </UniformGrid>
+        </GroupBox>
+        
+        <GroupBox Header="Другие настройки">
+            <StackPanel Margin="0 10 0 0">
+                <UniformGrid>
+                    <TextBlock FontSize="12" Text="Публичность пользователя:"></TextBlock>
+                    <CheckBox IsChecked="{Binding Publicity}" 
+                          Style="{DynamicResource SliderCheckBox}"
+                          Content="{Binding PublicityString}" HorizontalAlignment="Center"></CheckBox>
+                </UniformGrid>
+                <UniformGrid>
+                    <TextBlock FontSize="12" Text="Оставшееся место:"></TextBlock>
+                    <TextBlock Text="{Binding Space}" HorizontalAlignment="Center"></TextBlock>
+                </UniformGrid>
+            </StackPanel>
         </GroupBox>
     </StackPanel>
 </Window>

@@ -1,20 +1,7 @@
-﻿using HostingLib.Classes;
-using HostingLib.Controllers;
-using HostingLib.Data.Entities;
+﻿using HostingLib.Data.Entities;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using System.Windows.Forms;
 using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
@@ -56,7 +43,7 @@ namespace Client {
             if (fileDialog.ShowDialog() == true) {
                 fileNames = fileDialog.FileNames.ToList();
             }
-            if (System.Windows.Forms.MessageBox.Show("Are files public?", "Are files public?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            if (System.Windows.Forms.MessageBox.Show("Сделать файлы публичными?", "Сделать файлы публичными?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 isPublic = true;
 
             File? whereto = Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId);
@@ -87,7 +74,7 @@ namespace Client {
         }
 
         private void Button_Settings(object sender, RoutedEventArgs e) {
-            SettingsWindow window = new SettingsWindow(mainWindow, new (Model.User));
+            SettingsWindow window = new SettingsWindow(new (Model.User, Model.Client));
             window.ShowDialog();
         }
 
@@ -115,12 +102,20 @@ namespace Client {
                 System.Windows.Forms.MessageBox.Show("Некорректный путь");
                 return;
             }
-            Model.SelectedFolderId = file.Id;
-            await Model.Update();
+
+            if (file.IsDirectory) {
+                Model.SelectedFolderId = file.Id;
+                await Model.Update();
+            }
+            else {
+                // предпросмотр
+            }
         }
 
         private void Button_Others(object sender, RoutedEventArgs e) {
-            // окно с отображением публичных файлов других пользователей
+            PublicFilesWindow window = new PublicFilesWindow(this, new(Model.User, Model.Client));
+            this.Visibility = Visibility.Hidden;
+            window.ShowDialog();
         }
 
         private async void Button_Back(object sender, RoutedEventArgs e) {
@@ -135,7 +130,10 @@ namespace Client {
             await Model.Update();
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => mainWindow.GoBack(this);
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+            await Model.UpdatePublicity();
+            mainWindow.GoBack(this);
+        }
 
     }
 }
