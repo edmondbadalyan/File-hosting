@@ -21,7 +21,7 @@ namespace HostingLib.Controllers
             string cache_key = $"{cache_prefix}space:{user_id}";
 
             long? cached_space = await CachedDataController.GetValueAsync<long>(cache_key);
-            if (cached_space != null)
+            if (cached_space != default(long))
             {
                 LoggingController.LogInfo($"UserController.AvailableSpace - Request for user {user_id} returned {cached_space} from cache");
                 return (long)cached_space;
