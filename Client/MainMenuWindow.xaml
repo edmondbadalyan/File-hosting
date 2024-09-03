@@ -68,7 +68,6 @@
 
                     <DataGridTextColumn Header="Вес файла"
                                 Binding="{Binding Weight}"></DataGridTextColumn>
-
                     <DataGridCheckBoxColumn Header="Публичный"
                                 Binding="{Binding IsPublic}"
                                 ElementStyle="{DynamicResource SliderCheckBox}">

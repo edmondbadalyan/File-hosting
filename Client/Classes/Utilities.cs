@@ -1,9 +1,11 @@
+
 ﻿using System.Net.Mail;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Client {
+namespace Client
+{
     public static class Utilities
     {
         public static bool ValidateEmail(string email) {

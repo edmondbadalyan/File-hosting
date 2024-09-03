@@ -134,6 +134,5 @@ namespace Client {
             await Model.UpdatePublicity();
             mainWindow.GoBack(this);
         }
-
     }
 }
