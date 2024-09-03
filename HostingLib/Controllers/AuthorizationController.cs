@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HostingLib.Controllers
@@ -16,21 +17,21 @@ namespace HostingLib.Controllers
         {
             if (user is not null)
             {
-                EncryptionController encryption_controller = new(user.EncryptionKey, user.Iv);
-                if (encryption_controller.DecryptData(user.Password) == given_password)
+                if (BCrypt.Net.BCrypt.Verify(given_password, user.Password))
                 {
+                    LoggingController.LogDebug($"AuthorizationController.Authenticate - User found: {user.Id} {user.Email}");
                     Console.WriteLine($"User found: {user.Id} {user.Email}");
                     return user;
                 }
             }
+            LoggingController.LogDebug($"AuthorizationController.Authenticate - User not found");
             return null;
         }
 
-        //public static async Task<bool> Authorize(User user, int fileId)
-        //{
-        //    using HostingDbContext context = new();
-        //    bool isAuthorized = await context.User_Files.AnyAsync(uf => uf.User_id == user.Id && uf.File_id == fileId);
-        //    return isAuthorized;
-        //}
+        public static async Task<File> Authorize(int user_id, int file_id)
+        {
+            using HostingDbContext context = new();
+            return await context.Files.SingleOrDefaultAsync(f => f.Id == file_id && f.UserId == user_id && f.IsPublic && !f.IsDeleted);
+        }
     }
 }

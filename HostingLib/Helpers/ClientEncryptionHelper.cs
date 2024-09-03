@@ -12,6 +12,9 @@ using Request = HostingLib.Classes.Request;
 using TCPLib;
 using Newtonsoft.Json;
 using HostingLib.Controllers;
+using System.Threading;
+using HostingLib.Сlient;
+using StackExchange.Redis;
 
 namespace HostingLib.Helpers
 {
@@ -21,24 +24,24 @@ namespace HostingLib.Helpers
         private readonly byte[] key;
         private readonly byte[] iv;
 
-        public ClientEncryptionHelper(TcpClient client, byte[] _key, byte[] _iv)
+        public ClientEncryptionHelper(TcpClient client, byte[] _key, byte[] _iv, CancellationToken token)
         { 
             rsa = new RSACryptoServiceProvider();
-            string public_key = GetServerPublicKeyAsync(client).Result;
+            string public_key = GetServerPublicKeyAsync(client, token).Result;
             rsa.FromXmlString(public_key);
             key = _key;
             iv = _iv;
         }
 
-        private async Task<string> GetServerPublicKeyAsync(TcpClient client)
+        private async Task<string> GetServerPublicKeyAsync(TcpClient server, CancellationToken token)
         {
             Request request = new(Requests.GET_PUBLIC_KEY, Payloads.PUBLIC_KEY, "");
-            await RequestController.SendRequestAsync(client, request);
-            Response response = await ResponseController.ReceiveResponseAsync(client);
+            await RequestController.SendRequestAsync(server, request, token);
+            Response response = await ResponseController.ReceiveResponseAsync(server, token);
             return response.Payload;
         }
 
-        public async Task<Response> ExchangeEncryptedDataAsync(TcpClient client, Request request_to_send)
+        public async Task<Response> ExchangeEncryptedDataAsync(TcpClient server, Request request_to_send, CancellationToken token)
         {
             byte[] encryptedKey = rsa.Encrypt(key, false);
             byte[] encryptedIv = rsa.Encrypt(iv, false);
@@ -46,8 +49,8 @@ namespace HostingLib.Helpers
             EncryptedDataPayload payload = new(encryptedKey, encryptedIv, JsonConvert.SerializeObject(request_to_send));
 
             Request request = new(Requests.ENCRYPTED_DATA, Payloads.DATA, JsonConvert.SerializeObject(payload));
-            await RequestController.SendRequestAsync(client, request);
-            Response response = await ResponseController.ReceiveResponseAsync(client);
+            await RequestController.SendRequestAsync(server, request, token);
+            Response response = await ResponseController.ReceiveResponseAsync(server, token);
             return response;
         }
     }

@@ -17,6 +17,7 @@ namespace Test_Server
             AppSetting = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("settings.json")
+                    .AddEnvironmentVariables()
                     .Build();
         }
     }
