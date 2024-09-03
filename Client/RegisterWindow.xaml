@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="Регистрация" Height="300" Width="350">
+        Title="Регистрация" Height="350" Width="350">
     <StackPanel>
         <TextBlock Margin="10">Электронная почта:</TextBlock>
         <TextBox Margin="10" Text="{Binding Email}"></TextBox>
@@ -15,6 +15,8 @@
         <PasswordBox Margin="10" PasswordChar="*"
                      PasswordChanged="PasswordChanged"></PasswordBox>
 
+        <CheckBox Margin="10 5 10 10" IsChecked="{Binding IsPublic}">Публичный</CheckBox>
+        
         <CheckBox Margin="10" IsChecked="{Binding AgreeWithTerms}">
             <Hyperlink Click="Button_Terms">Согласны с условиями?</Hyperlink>
         </CheckBox>

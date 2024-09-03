@@ -1,9 +1,4 @@
-﻿using Prism.Mvvm;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using HostingLib.Data.Entities;
 
 namespace Client {
     public class CreateWindowModel : BindableBase {
@@ -13,10 +8,18 @@ namespace Client {
             set => SetProperty(ref folderName, value);
         }
 
-        public string FolderPath { get; set; }
+        private bool isPublic = false;
+        public bool IsPublic {
+            get => isPublic;
+            set => SetProperty(ref isPublic, value);
+        }
 
-        public CreateWindowModel(string folderPath) {
-            FolderPath = folderPath;
+        public File ParentFolder { get; set; }
+        public User User { get; set; }
+
+        public CreateWindowModel(File parentFolder, User user) {
+            ParentFolder = parentFolder;
+            User = user;
         }
     }
 }
