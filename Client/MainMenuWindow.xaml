@@ -70,16 +70,7 @@
                                 Binding="{Binding Weight}"></DataGridTextColumn>
                     <DataGridCheckBoxColumn Header="Публичный"
                                 Binding="{Binding IsPublic}"
-                                ElementStyle="{DynamicResource SliderCheckBox}">
-                        <DataGridCheckBoxColumn.CellStyle>
-                            <Style>
-                                <EventSetter Event="CheckBox.Checked"
-                                             Handler="Public_OnChecked"/>
-                                <EventSetter Event="CheckBox.Unchecked"
-                                             Handler="Public_OnUnchecked"/>
-                            </Style>
-                        </DataGridCheckBoxColumn.CellStyle>
-                    </DataGridCheckBoxColumn>
+                                ElementStyle="{DynamicResource SliderCheckBox}"></DataGridCheckBoxColumn>
                 </DataGrid.Columns> 
             </DataGrid>
         </DockPanel>

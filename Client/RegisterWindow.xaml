@@ -15,9 +15,9 @@
         <PasswordBox Margin="10" PasswordChar="*"
                      PasswordChanged="PasswordChanged"></PasswordBox>
 
-        <CheckBox Margin="10 5 10 10" IsChecked="{Binding IsPublic}">Публичный</CheckBox>
-        
-        <CheckBox Margin="10" IsChecked="{Binding AgreeWithTerms}">
+        <CheckBox Margin="10 5 10 10" IsChecked="{Binding IsPublic}" Style="{DynamicResource SliderCheckBox}">Публичный</CheckBox>
+
+        <CheckBox Margin="10" IsChecked="{Binding AgreeWithTerms}" Style="{DynamicResource SliderCheckBox}">
             <Hyperlink Click="Button_Terms">Согласны с условиями?</Hyperlink>
         </CheckBox>
 

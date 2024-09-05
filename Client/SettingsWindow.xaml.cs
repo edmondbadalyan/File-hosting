@@ -6,16 +6,18 @@ namespace Client {
     /// Логика взаимодействия для SettingsWindow.xaml
     /// </summary>
     public partial class SettingsWindow : Window {
+        MainWindow window;
         SettingsWindowModel Model { get; set; }
 
-        public SettingsWindow(SettingsWindowModel model) {
+        public SettingsWindow(MainWindow window, SettingsWindowModel model) {
             InitializeComponent();
             
+            this.window = window;
             this.Model = model;
         }
 
-        private void Button_LightTheme(object sender, RoutedEventArgs e) => Model.IsDark = false;
-        private void Button_DarkTheme(object sender, RoutedEventArgs e) => Model.IsDark = true;
+        private void Button_LightTheme(object sender, RoutedEventArgs e) => window.Config.Theme = "light";
+        private void Button_DarkTheme(object sender, RoutedEventArgs e) => window.Config.Theme = "dark";
 
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             await Task.Run(async () => await ClientCommands.UpdateUserPublicityAsync(Model.Client, Model.User, Model.Publicity));

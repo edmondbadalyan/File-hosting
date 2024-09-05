@@ -10,10 +10,17 @@ namespace Client {
         LoginWindow login;
         RegisterWindow register;
         public TcpClient Server { get; set; }
+        public ConfigController Config { get; set; }
 
         public MainWindow() {
             InitializeComponent();
-            Server = new("192.168.1.133", 2024);
+            Preset();
+        }
+
+        public async void Preset() {
+            Config = new ConfigController();
+            await Task.Delay(1000);
+            Server = new(Config.IP, Config.Port);
         }
 
         private void Button_Login(object sender, RoutedEventArgs e) {

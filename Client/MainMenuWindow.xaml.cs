@@ -1,5 +1,4 @@
 ﻿using HostingLib.Data.Entities;
-using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Forms;
 using ClientCommands = HostingLib.Сlient.Client;
@@ -23,7 +22,7 @@ namespace Client {
 
         private async void Button_Download(object sender, RoutedEventArgs e) {            
             string whereto = string.Empty;
-            OpenFolderDialog folderDialog = new OpenFolderDialog();
+            Microsoft.Win32.OpenFolderDialog folderDialog = new Microsoft.Win32.OpenFolderDialog();
             if (folderDialog.ShowDialog() == true) {
                 whereto = folderDialog.FolderName;
             }
@@ -39,7 +38,7 @@ namespace Client {
         private async void Button_Upload(object sender, RoutedEventArgs e) {
             List<string> fileNames = new List<string>();
             bool isPublic = false;
-            OpenFileDialog fileDialog = new OpenFileDialog();
+            Microsoft.Win32.OpenFileDialog fileDialog = new Microsoft.Win32.OpenFileDialog();
             if (fileDialog.ShowDialog() == true) {
                 fileNames = fileDialog.FileNames.ToList();
             }
@@ -74,7 +73,7 @@ namespace Client {
         }
 
         private void Button_Settings(object sender, RoutedEventArgs e) {
-            SettingsWindow window = new SettingsWindow(new (Model.User, Model.Client));
+            SettingsWindow window = new SettingsWindow(mainWindow, new (Model.User, Model.Client));
             window.ShowDialog();
         }
 

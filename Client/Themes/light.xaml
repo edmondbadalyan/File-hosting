@@ -26,7 +26,6 @@
 
     <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
         <Setter Property="Foreground" Value="#00AACC"/>
-        <Setter Property="Background" Value="LightGray"/>
     </Style>
     <Style TargetType="{x:Type Label}">
         <Setter Property="Foreground" Value="#00AACC"/>
@@ -109,7 +108,6 @@
                             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <!--<Setter TargetName="ForegroundPanel" Property="Background" Value="{DynamicResource Accent}" />-->
                             <Setter TargetName="ForegroundPanel" Property="Background" Value="#00AACC" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard x:Name="BeginStoryboardCheckedTrue" Storyboard="{StaticResource StoryboardIsChecked}" />
