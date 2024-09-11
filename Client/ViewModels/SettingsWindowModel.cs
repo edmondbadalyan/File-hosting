@@ -26,10 +26,17 @@ namespace Client {
             set => SetProperty(ref space, value);
         }
 
+        private TimeSpan publicityTimeout;
+        public TimeSpan PublicityTimeout {
+            get => publicityTimeout;
+            set => SetProperty(ref publicityTimeout, value);
+        }
+
         public SettingsWindowModel(User user, TcpClient client) {
             User = user;
             Client = client;
             Publicity = user.IsPublic;
+            PublicityTimeout = TimeSpan.FromDays(30);
             UpdateSpace();
         }
 

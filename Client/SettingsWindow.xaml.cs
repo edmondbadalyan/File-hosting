@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using ClientCommands = HostingLib.Сlient.Client;
+using Xceed;
 
 namespace Client {
     /// <summary>
@@ -11,7 +12,6 @@ namespace Client {
 
         public SettingsWindow(MainWindow window, SettingsWindowModel model) {
             InitializeComponent();
-            
             this.window = window;
             this.Model = model;
         }
@@ -21,6 +21,7 @@ namespace Client {
 
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             await Task.Run(async () => await ClientCommands.UpdateUserPublicityAsync(Model.Client, Model.User, Model.Publicity));
+            await Task.Run(async () => await ClientCommands.UpdateUserFileDeletionTimeAsync(Model.Client, Model.User, Model.PublicityTimeout));
         }
     }
 }

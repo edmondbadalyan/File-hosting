@@ -1,0 +1,5 @@
+{
+"ConnectionStrings": {
+  "Test": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Hosting_TestDb;Integrated Security=True;"
+}
+}

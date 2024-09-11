@@ -59,6 +59,12 @@ namespace Client {
             window.ShowDialog();
         }
 
+        private void Button_Move(object sender, RoutedEventArgs e) {
+            IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
+            MoveWindow window = new MoveWindow(mainWindow, new(Model.User, Model.Client, files, Model.AllFilesString.Where(file => file[^1] == '\\').ToList()));
+            window.ShowDialog();
+        }
+
         private async void Button_Delete(object sender, RoutedEventArgs e) {
             IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {

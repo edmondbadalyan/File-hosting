@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using ClientCommands = HostingLib.Сlient.Client;
 
-namespace Client.ViewModels {
+namespace Client {
     public class PublicFilesWindowModel : BindableBase {
         public User User { get; set; }
         public TcpClient Client { get; set; }

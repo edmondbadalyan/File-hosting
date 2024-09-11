@@ -1,0 +1,7 @@
+{
+  "ip": "0.0.0.0",
+  "port": 2024,
+  "ConnectionStrings": {
+    "Test": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Hosting_TestDb;Integrated Security=True;"
+  }
+}

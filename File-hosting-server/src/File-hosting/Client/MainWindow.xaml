@@ -1,0 +1,19 @@
+﻿<Window x:Class="Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Client"
+        mc:Ignorable="d"
+        Closing="Window_Closing"
+        Title="Главное меню" Height="450" Width="800">
+    <DockPanel>
+        <UniformGrid DockPanel.Dock="Bottom">
+            <Button Click="Button_Login" Margin="30 0">Войти</Button>
+            <Button Click="Button_Register" Margin="30 0">Зарегестрироваться</Button>
+        </UniformGrid>
+        <Viewbox>
+            <Label>Файловый хостинг</Label>
+        </Viewbox>
+    </DockPanel>
+</Window>

@@ -18,6 +18,7 @@
                 <Button Margin="0 5" Click="Button_Download">Скачать</Button>
                 <Button Margin="0 5" Click="Button_Upload">Загрузить</Button>
                 <Button Margin="0 5" Click="Button_Create">Создать папку</Button>
+                <Button Margin="0 5" Click="Button_Move">Переместить</Button>
                 <Button Margin="0 5" Click="Button_Delete">Удалить</Button>
                 <Button Margin="0 5" Click="Button_DeletedFiles">Удалённые файлы</Button>
                 <Button Margin="0 5" Click="Button_Settings">Настройки</Button>
@@ -35,7 +36,6 @@
                     <DockPanel>
                         <Button Margin="10 30" DockPanel.Dock="Right"
                                 Click="Button_Search">Найти</Button>
-                        <!--SelectedItem="{Binding Search}"-->
                         <ComboBox ItemsSource="{Binding AllFilesString}" Margin="10 30" Text="{Binding Search}"></ComboBox>
                     </DockPanel>
                 </GroupBox>                

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  mssql:
+    build:
+      context: .
+      dockerfile: src/Database/Dockerfile
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD:StrongPassword123!
+    ports:
+      - "1434:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks:
+      - file-hosting
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - file-hosting
+
+  server:
+    build:
+      context: .
+      dockerfile: src/File-hosting/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Test=Data Source=mssql,1433;Initial Catalog=Hosting_TestDb;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True;Encrypt=False;
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - mssql
+      - redis
+    volumes:
+      - /Files:/Files
+      - ./mssql.crt:/usr/local/share/ca-certificates/mssql.crt
+    networks:
+      - file-hosting
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - server
+    networks:
+      - file-hosting
+
+volumes:
+  mssql_data:
+  redis_data:
+
+networks:
+  file-hosting:
+    driver: bridge

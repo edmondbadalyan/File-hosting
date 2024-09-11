@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Client"
+        xmlns:local="clr-namespace:Client" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Closing="Window_Closing"
         Title="Настройки" Height="300" Width="350">
@@ -73,6 +73,12 @@
                 <UniformGrid>
                     <TextBlock FontSize="12" Text="Оставшееся место:"></TextBlock>
                     <TextBlock Text="{Binding Space}" HorizontalAlignment="Center"></TextBlock>
+                </UniformGrid>
+                <UniformGrid>
+                    <TextBlock FontSize="12" Text="Частота автообновления:"></TextBlock>
+                    <xctk:TimePicker Language="ru"
+                                     Value="{Binding PublicityTimeout}"
+                                     ></xctk:TimePicker>
                 </UniformGrid>
             </StackPanel>
         </GroupBox>
