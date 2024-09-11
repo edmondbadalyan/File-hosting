@@ -48,7 +48,7 @@ namespace HostingLib.Сlient
             {
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                UserPayload appended_request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, null, false);
+                UserPayload appended_request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, null, false, null);
                 Request appended_request = new(Requests.USER_SPACE, Payloads.USER, JsonConvert.SerializeObject(appended_request_payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, appended_request, cts.Token);
@@ -74,7 +74,7 @@ namespace HostingLib.Сlient
 
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                UserPayload appended_request_payload = new(null, encrypted_email, null, false);
+                UserPayload appended_request_payload = new(null, encrypted_email, null, false, null);
                 Request appended_request = new(Requests.USER_GET, Payloads.USER, JsonConvert.SerializeObject(appended_request_payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, appended_request, cts.Token);
@@ -100,7 +100,7 @@ namespace HostingLib.Сlient
 
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, encrypted_password, false);
+                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, encrypted_password, false, null);
                 Request request = new(Requests.USER_AUTHENTICATE, Payloads.USER, JsonConvert.SerializeObject(request_payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request, cts.Token);
@@ -113,7 +113,7 @@ namespace HostingLib.Сlient
             }
         }
 
-        public static async Task CreateUserAsync(TcpClient server, string email, string password, bool isPublic)
+        public static async Task CreateUserAsync(TcpClient server, string email, string password, bool isPublic, TimeSpan? auto_file_deletion_time)
         {
             CancellationTokenSource cts = new();
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
@@ -126,7 +126,7 @@ namespace HostingLib.Сlient
 
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                UserPayload appended_request_payload = new(null, encrypted_email, encrypted_password, isPublic);
+                UserPayload appended_request_payload = new(null, encrypted_email, encrypted_password, isPublic, auto_file_deletion_time.ToString());
                 Request appended_request = new(Requests.USER_CREATE, Payloads.USER, JsonConvert.SerializeObject(appended_request_payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, appended_request, cts.Token);
@@ -151,7 +151,7 @@ namespace HostingLib.Сlient
 
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, encrypted_password, false);
+                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, encrypted_password, false, null);
                 Request request = new(Requests.USER_UPDATE, Payloads.USER, JsonConvert.SerializeObject(request_payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request, cts.Token);
@@ -173,8 +173,30 @@ namespace HostingLib.Сlient
             {
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, null, publicity);
+                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, null, publicity, null);
                 Request request = new(Requests.USER_UPDATE_PUBLICITY, Payloads.USER, JsonConvert.SerializeObject(request_payload));
+
+                Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request, cts.Token);
+                Console.WriteLine(response.Payload);
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                throw;
+            }
+        }
+
+        public static async Task UpdateUserFileDeletionTimeAsync(TcpClient server, User user, TimeSpan file_deletion_time)
+        {
+            CancellationTokenSource cts = new();
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            try
+            {
+                ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
+
+                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, null, false, file_deletion_time.ToString());
+                Request request = new(Requests.USER_UPDATE_FILE_DELETION_TIME, Payloads.USER, JsonConvert.SerializeObject(request_payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request, cts.Token);
                 Console.WriteLine(response.Payload);
@@ -194,7 +216,7 @@ namespace HostingLib.Сlient
             {
                 ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
 
-                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, null, false);
+                UserPayload request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, null, false, null);
                 Request request = new(Requests.USER_DELETE, Payloads.USER, JsonConvert.SerializeObject(request_payload));
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, request, cts.Token);
