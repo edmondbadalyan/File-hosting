@@ -21,7 +21,7 @@ namespace HostingLib.Data.Context
 
         public HostingDbContext()
         {
-            var config = new ConfigurationBuilder()
+            IConfigurationRoot config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("settings.json", optional: false, reloadOnChange: true)
                 .Build();
@@ -36,7 +36,11 @@ namespace HostingLib.Data.Context
                 .WithOne(f => f.User)
                 .HasForeignKey(f => f.UserId);
 
-            modelBuilder.Entity<HostingLib.Data.Entities.File>()
+            modelBuilder.Entity<User>()
+                .Property(u => u.AutoFileDeletionTime)
+                .HasDefaultValue(TimeSpan.FromDays(30));
+
+            modelBuilder.Entity<Entities.File>()
                 .HasMany(f => f.Children)
                 .WithOne(f => f.Parent)
                 .HasForeignKey(f => f.ParentId)

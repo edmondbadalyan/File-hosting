@@ -299,7 +299,9 @@ namespace HostingLib.Controllers
                 context.Files.Update(file);
                 await context.SaveChangesAsync(token);
 
-                await CachedDataController.ScheduleFileDeletionAsync(file.Id.ToString(), TimeSpan.FromSeconds(30));
+                User user = await UserController.GetUserByIdAsync(file.UserId, token);
+
+                await CachedDataController.ScheduleFileDeletionAsync(file.Id.ToString(), user.AutoFileDeletionTime);
 
                 LoggingController.LogInfo($"FileController.DeleteFile - File {file.Id} {file.Name} marked as deleted and moved to {new_path}");
 
@@ -543,11 +545,15 @@ namespace HostingLib.Controllers
                 Directory.Move(folder.Path, new_folder_path);
                 folder.Path = new_folder_path;
                 folder.IsDeleted = true;
+                 
+                User user = await UserController.GetUserByIdAsync(folder.UserId, token);
 
-                await DeleteChildren(folder.Children, new_folder_path, context, token);
+                await DeleteChildren(folder.Children, new_folder_path, context, user, token);
 
                 context.Update(folder);
                 await context.SaveChangesAsync(token);
+                
+                await CachedDataController.ScheduleFileDeletionAsync(folder.Id.ToString(), user.AutoFileDeletionTime);
 
                 LoggingController.LogInfo($"FileController.DeleteFolder - folder {folder.Name} moved to deleted successfully");
 
@@ -560,7 +566,7 @@ namespace HostingLib.Controllers
                 await context.DisposeAsync();
             }
         }
-        public static async Task DeleteChildren(ICollection<Data.Entities.File> children, string path, HostingDbContext context, CancellationToken token)
+        public static async Task DeleteChildren(ICollection<Data.Entities.File> children, string path, HostingDbContext context, User user, CancellationToken token)
         {
             foreach (Data.Entities.File child in children)
             {
@@ -571,13 +577,15 @@ namespace HostingLib.Controllers
                 Directory.Move(child.Path, new_path);
                 child.Path = new_path;
                 context.Files.Update(child);
+                await CachedDataController.ScheduleFileDeletionAsync(child.Id.ToString(), user.AutoFileDeletionTime);
+
 
                 LoggingController.LogInfo($"FileController.DeleteChildren - file {child.Id} {child.Name} marked as deleted and moved to {child.Path}");
 
                 if (child.IsDirectory)
                 {
                     await context.Entry(child).Collection(f => f.Children).LoadAsync(token);
-                    await DeleteChildren(child.Children, child.Path, context, token);
+                    await DeleteChildren(child.Children, child.Path, context, user, token);
                 }
             }
         }

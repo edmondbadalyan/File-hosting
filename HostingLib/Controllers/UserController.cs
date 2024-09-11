@@ -73,7 +73,25 @@ namespace HostingLib.Controllers
             }
         }
 
-        public static async Task CreateUserAsync(string email, string password, bool isPublic, CancellationToken token)
+        public static async Task<User> GetUserByIdAsync(int id, CancellationToken token)
+        {
+            using HostingDbContext context = new();
+            token.ThrowIfCancellationRequested();
+
+            try
+            {
+                User user = await context.Users.SingleOrDefaultAsync(u => u.Id == id, token);
+                LoggingController.LogInfo($"UserController.GetUserByIdAsync - Request for id {id} returned user");
+                return user;
+            }
+            catch (Exception ex)
+            {
+                LoggingController.LogError($"UserController.GetUserAsync - Error fetching user with id {id}: {ex.Message}");
+                throw;
+            }
+        }
+
+        public static async Task CreateUserAsync(string email, string password, bool isPublic, TimeSpan? deletion_time, CancellationToken token)
         {
             using var context = new HostingDbContext();
 
@@ -89,7 +107,7 @@ namespace HostingLib.Controllers
                     throw new InvalidOperationException(error_message);
                 }
 
-                User new_user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true, isPublic);
+                User new_user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true, isPublic, deletion_time);
                 context.Users.Add(new_user);
                 await context.SaveChangesAsync(token);
 
@@ -157,6 +175,27 @@ namespace HostingLib.Controllers
             catch (Exception ex)
             {
                 LoggingController.LogError($"UserController.UpdateUserPublicityAsync - Error updating publicity for user {user.Email}: {ex.Message}");
+                throw;
+            }
+        }
+
+        public static async Task UpdateUserFileDeletionTimeAsync(User user, TimeSpan new_deletion_time, CancellationToken token)
+        {
+            using var context = new HostingDbContext();
+
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                user.AutoFileDeletionTime = new_deletion_time;
+
+                context.Users.Update(user);
+                await context.SaveChangesAsync(token);
+
+                LoggingController.LogInfo($"UserController.UpdateUserFileDeletionTimeAsync - Updated file deletion time for user {user.Email}");
+            }
+            catch (Exception ex)
+            {
+                LoggingController.LogError($"UserController.UpdateUserFileDeletionTimeAsync - Error updating file deletion time for user {user.Email}: {ex.Message}");
                 throw;
             }
         }

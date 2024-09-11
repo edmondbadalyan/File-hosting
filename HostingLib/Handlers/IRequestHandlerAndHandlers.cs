@@ -70,7 +70,7 @@ namespace HostingLib.Handlers
                     case Payloads.USER:
                         {
                             string user = null;
-                            string email = null, password = null; 
+                            string email = null, password = null, auto_file_deletion_time = null; 
                             bool isPublic = false;
 
                             appended_request_payload = JsonConvert.DeserializeObject<UserPayload>(appended_request.Payload);
@@ -94,8 +94,12 @@ namespace HostingLib.Handlers
                             {
                                 isPublic = appended_request_payload.IsPublic;
                             }
+                            if(appended_request_payload.AutoFileDeletionTime != null)
+                            {
+                                auto_file_deletion_time = appended_request_payload.AutoFileDeletionTime;
+                            }
 
-                            appended_request_payload = new UserPayload(user, email, password, isPublic);
+                            appended_request_payload = new UserPayload(user, email, password, isPublic, auto_file_deletion_time);
 
                             string decrypted_payload = JsonConvert.SerializeObject(appended_request_payload);
                             decrypted_request = new(appended_request.RequestType, Payloads.USER, decrypted_payload);
@@ -220,7 +224,8 @@ namespace HostingLib.Handlers
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
-                await UserController.CreateUserAsync(payload.Email, payload.Password, payload.IsPublic, token);
+                TimeSpan? file_deletion_time = payload.AutoFileDeletionTime is null ? null : TimeSpan.Parse(payload.AutoFileDeletionTime);
+                await UserController.CreateUserAsync(payload.Email, payload.Password, payload.IsPublic, file_deletion_time, token);
                 return new(Responses.Success, Payloads.MESSAGE, $"User created successfully with email {payload.Email}");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -306,6 +311,29 @@ namespace HostingLib.Handlers
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
                 await UserController.UpdateUserPublicityAsync(user, payload.IsPublic, token);
                 return new(Responses.Success, Payloads.MESSAGE, "User publicity updated successfully!");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
+            }
+            catch (Exception ex)
+            {
+                return new(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
+    public class UpdateUserFileDeletionTimeHandler : IRequestHandler<Response>
+    {
+          public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
+        {
+            try
+            {
+                UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
+                User user = JsonConvert.DeserializeObject<User>(payload.User);
+                TimeSpan file_deletion_time = TimeSpan.Parse(payload.AutoFileDeletionTime);
+                await UserController.UpdateUserFileDeletionTimeAsync(user, file_deletion_time, token);
+                return new(Responses.Success, Payloads.MESSAGE, "User file deletion time updated successfully!");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
             {

@@ -31,6 +31,8 @@ namespace HostingLib.Controllers
             { Requests.USER_GET, new GetUserHandler() },
             { Requests.USER_AUTHENTICATE, new AuthenticateUserHandler() },
             { Requests.USER_UPDATE, new UpdateUserHandler() },
+            { Requests.USER_UPDATE_PUBLICITY, new UpdateUserPublicityHandler()},
+            { Requests.USER_UPDATE_FILE_DELETION_TIME, new UpdateUserFileDeletionTimeHandler()},
             { Requests.USER_DELETE, new DeleteUserHandler() },
 
             { Requests.FILE_UPLOAD, new UploadFileHandler() },

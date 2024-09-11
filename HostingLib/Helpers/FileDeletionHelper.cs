@@ -11,6 +11,7 @@ namespace HostingLib.Helpers
 {
     public static class FileDeletionHelper
     {
+        private readonly TimeSpan delay = TimeSpan.FromMinutes(1);
         public static async Task RunAsync(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
@@ -25,15 +26,15 @@ namespace HostingLib.Helpers
                     await RedisConnectionHelper.db.SortedSetRemoveAsync("deleted_files", file_id);
                 }
 
-                // Handle folder deletions
-                RedisValue[] folders_to_delete = await RedisConnectionHelper.db.SortedSetRangeByScoreAsync("deleted_folders", 0, current_time);
-                foreach (RedisValue folder_id in folders_to_delete)
-                {
-                    await FileController.EraseFolder((int) folder_id, token);
-                    await RedisConnectionHelper.db.SortedSetRemoveAsync("deleted_folders", folder_id);
-                }
+                // // Handle folder deletions
+                // RedisValue[] folders_to_delete = await RedisConnectionHelper.db.SortedSetRangeByScoreAsync("deleted_folders", 0, current_time);
+                // foreach (RedisValue folder_id in folders_to_delete)
+                // {
+                //     await FileController.EraseFolder((int) folder_id, token);
+                //     await RedisConnectionHelper.db.SortedSetRemoveAsync("deleted_folders", folder_id);
+                // }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), token);
+                await Task.Delay(delay, token);
             }
         }
     }

@@ -14,13 +14,15 @@ namespace HostingLib.Classes
         public string? Email { get; set; }
         public string? Password { get; set; }
         public bool IsPublic { get; set; }
+        public string? AutoFileDeletionTime { get;set;}
 
-        public UserPayload(string user, string email, string password, bool isPublic)
+        public UserPayload(string user, string email, string password, bool isPublic, string auto_file_deletion_time)
         {
             User = user;
             Email = email;
             Password = password;
             IsPublic = isPublic;
+            AutoFileDeletionTime = auto_file_deletion_time;
         }
     }
 
@@ -108,6 +110,7 @@ namespace HostingLib.Classes
         USER_AUTHENTICATE,
         USER_UPDATE,
         USER_UPDATE_PUBLICITY,
+        USER_UPDATE_FILE_DELETION_TIME,
         USER_DELETE,
 
         FILE_UPLOAD,
