@@ -30,7 +30,7 @@ namespace Client {
         }
 
         private async void Button_Send(object sender, RoutedEventArgs e) {
-            if (Validation.ValidatePassword(Password) && Validation.ValidatePassword(PasswordCopy) && Password.Password == PasswordCopy.Password) {
+            if (Utilities.ValidatePassword(Password) && Utilities.ValidatePassword(PasswordCopy) && Password.Password == PasswordCopy.Password) {
                 User user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, email));
                 await Task.Run(async () => await ClientCommands.UpdateUserAsync(
                     mainWindow.Server, 
