@@ -26,7 +26,7 @@ namespace HostingLib.Controllers
 
         #region File
 
-        public static async Task UploadFileAsync(TcpClient client, string? file_path, CancellationToken token)
+        public static async Task UploadFileAsync(TcpClient client, string? file_path, CancellationToken token, IProgress<double> progress = null)
         {
             using FileStream uploaded_file = new(file_path, FileMode.Open, FileAccess.Read);
             try
@@ -35,7 +35,7 @@ namespace HostingLib.Controllers
                 long file_length = uploaded_file.Length;
 
                 LoggingController.LogDebug($"FileController.UploadFileAsync - Started sending file");
-                await TCP.SendFile(client, uploaded_file, file_length, token);
+                await TCP.SendFile(client, uploaded_file, file_length, token, progress);
                 LoggingController.LogDebug($"FileController.UploadFileAsync - File sent successfully");
             }
             catch (Exception ex)
@@ -47,7 +47,7 @@ namespace HostingLib.Controllers
             }
         }
 
-        public static async Task DownloadFileAsync(TcpClient client, string? file_path, int user_id, int? parent_id, CancellationToken token)
+        public static async Task DownloadFileAsync(TcpClient client, string? file_path, int user_id, int? parent_id, CancellationToken token, IProgress<double> progress = null)
         {
             using FileStream new_file = System.IO.File.Create(file_path);
             try
@@ -56,7 +56,7 @@ namespace HostingLib.Controllers
 
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - Started receiving file");
 
-                await TCP.ReceiveFile(client, new_file, token);
+                await TCP.ReceiveFile(client, new_file, token, progress);
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - File received successfully");
 
                 await CachedDataController.RemoveCacheAsync($"{UserController.CachePrefix}space:{user_id}");
@@ -447,11 +447,11 @@ namespace HostingLib.Controllers
             {
                 token.ThrowIfCancellationRequested();
 
-                await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
+                await LoadFolderChildrenRecursive(folder, context, token);
                 string new_folder_path = Path.Combine(folder_to, folder.Name);
 
                 Data.Entities.File new_folder = await context.Files
-                   .SingleOrDefaultAsync(f => f.Path == folder_to, token);
+                    .SingleOrDefaultAsync(f => f.Path == folder_to, token);
 
                 if (new_folder == null)
                 {
@@ -462,19 +462,9 @@ namespace HostingLib.Controllers
                 Directory.Move(folder.Path, new_folder_path);
                 folder.Path = new_folder_path;
 
-                foreach (Data.Entities.File file in folder.Children)
-                {
-                    string new_path = Path.Combine(new_folder_path, file.Name);
-                    file.Path = new_path;
-                    await CachedDataController.RemoveCacheAsync($"{CachePrefix}{file.UserId}:{file.ParentId}");
-                    context.Update(file);
-                    LoggingController.LogInfo($"FileController.MoveFolder - file {file.Id} {file.Name} moved to {new_path}");
-                    await CachedDataController.RemoveCacheAsync($"{CachePrefix}{file.UserId}:{new_folder.ParentId}");
-                    LoggingController.LogDebug($"FileController.MoveFolder - Cleaned up cache for file {file.Id}");
-                }
+                await UpdateFolderPathsRecursive(folder, new_folder_path, context, token);
 
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}{folder.UserId}:{folder.ParentId}");
-
                 context.Update(folder);
                 await context.SaveChangesAsync(token);
 
@@ -485,6 +475,36 @@ namespace HostingLib.Controllers
             finally
             {
                 await context.DisposeAsync();
+            }
+        }
+
+        private static async Task LoadFolderChildrenRecursive(Data.Entities.File folder, HostingDbContext context, CancellationToken token)
+        {
+            await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
+
+            foreach (var child in folder.Children.Where(f => f.IsDirectory)) 
+            {
+                await LoadFolderChildrenRecursive(child, context, token);
+            }
+        }
+
+        private static async Task UpdateFolderPathsRecursive(Data.Entities.File folder, string newFolderPath, HostingDbContext context, CancellationToken token)
+        {
+            foreach (var file in folder.Children)
+            {
+                string new_path = Path.Combine(newFolderPath, file.Name);
+                file.Path = new_path;
+
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}{file.UserId}:{file.ParentId}");
+                context.Update(file);
+                LoggingController.LogInfo($"FileController.MoveFolder - file {file.Id} {file.Name} moved to {new_path}");
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}{file.UserId}:{folder.ParentId}");
+                LoggingController.LogDebug($"FileController.MoveFolder - Cleaned up cache for file {file.Id}");
+
+                if (file.IsDirectory) 
+                {
+                    await UpdateFolderPathsRecursive(file, new_path, context, token);
+                }
             }
         }
 
