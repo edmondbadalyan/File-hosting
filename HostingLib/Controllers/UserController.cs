@@ -132,7 +132,7 @@ namespace HostingLib.Controllers
                     throw new InvalidOperationException(error_message);
                 }
 
-                User new_user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true, isPublic, deletion_time);
+                User new_user = new(email, BCrypt.Net.BCrypt.HashPassword(password), true, isPublic, deletion_time is null ? TimeSpan.FromSeconds(0) : deletion_time);
                 context.Users.Add(new_user);
                 await context.SaveChangesAsync(token);
 

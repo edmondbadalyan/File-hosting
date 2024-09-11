@@ -30,10 +30,9 @@ namespace Test_Console
             password = Console.ReadLine();
 
             User received_user = await Client.GetUserAsync(server, email);
-            if(received_user != null)
+            if(received_user == null)
             {
-                HostingLib.Data.Entities.File file = await Client.GetFileAsync(server, @"../../../Files\6\Инструкция.pdf", received_user);
-                await Client.UploadFileAsync(server, @"C:\Users\Роман\Downloads\Screenshot_3.jpg", received_user, file, true);
+                await Client.CreateUserAsync(server, email, password, true, null);
             }
             //else
             //{

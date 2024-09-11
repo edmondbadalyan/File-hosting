@@ -246,7 +246,7 @@ namespace HostingLib.Handlers
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
-                TimeSpan? file_deletion_time = payload.AutoFileDeletionTime is null ? null : TimeSpan.Parse(payload.AutoFileDeletionTime);
+                TimeSpan? file_deletion_time = payload.AutoFileDeletionTime == "" ? null : TimeSpan.Parse(payload.AutoFileDeletionTime);
                 await UserController.CreateUserAsync(payload.Email, payload.Password, payload.IsPublic, file_deletion_time, token);
                 return new(Responses.Success, Payloads.MESSAGE, $"User created successfully with email {payload.Email}");
             }
