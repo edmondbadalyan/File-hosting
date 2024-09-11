@@ -199,7 +199,7 @@ namespace HostingLib.Handlers
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
-                long space = await UserController.GetAvailableSpace(user.Id, token);
+                long space = await UserController.GetAvailableSpaceAsync(user.Id, token);
                 return new(Responses.Success, Payloads.USER, space.ToString());
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -220,7 +220,7 @@ namespace HostingLib.Handlers
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
-                await UserController.CreateUser(payload.Email, payload.Password, payload.IsPublic, token);
+                await UserController.CreateUserAsync(payload.Email, payload.Password, payload.IsPublic, token);
                 return new(Responses.Success, Payloads.MESSAGE, $"User created successfully with email {payload.Email}");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -241,7 +241,7 @@ namespace HostingLib.Handlers
             try
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
-                User user = await UserController.GetUser(payload.Email, token);
+                User user = await UserController.GetUserAsync(payload.Email, token);
                 return new(Responses.Success, Payloads.USER, JsonConvert.SerializeObject(user));
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -282,7 +282,7 @@ namespace HostingLib.Handlers
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
-                await UserController.UpdateUser(user, payload.Password, token);
+                await UserController.UpdateUserAsync(user, payload.Password, token);
                 return new(Responses.Success, Payloads.MESSAGE, "User updated successfully!");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -304,7 +304,7 @@ namespace HostingLib.Handlers
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
-                await UserController.UpdateUserPublicity(user, payload.IsPublic, token);
+                await UserController.UpdateUserPublicityAsync(user, payload.IsPublic, token);
                 return new(Responses.Success, Payloads.MESSAGE, "User publicity updated successfully!");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -326,7 +326,7 @@ namespace HostingLib.Handlers
             {
                 UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
                 User user = JsonConvert.DeserializeObject<User>(payload.User);
-                await UserController.DeleteUser(user, token);
+                await UserController.DeleteUserAsync(user, token);
                 return new(Responses.Success, Payloads.MESSAGE, "User deleted successfully!");
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
@@ -351,7 +351,7 @@ namespace HostingLib.Handlers
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 FileDetails info = JsonConvert.DeserializeObject<FileDetails>(payload.FileDetails);
-                string file_path = Path.Combine(FileController.storage_path, payload.UserId.ToString(), info.Name);
+                string file_path = Path.Combine(FileController.StoragePath, payload.UserId.ToString(), info.Name);
 
                 if (System.IO.File.Exists(file_path))
                 {
@@ -396,7 +396,7 @@ namespace HostingLib.Handlers
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
-                string file_path = Path.Combine(FileController.storage_path, payload.UserId.ToString(), file.Name);
+                string file_path = Path.Combine(FileController.StoragePath, payload.UserId.ToString(), file.Name);
 
                 if(file.UserId != payload.UserId && !file.IsPublic)
                 {
