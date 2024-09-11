@@ -1,0 +1,17 @@
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/bin/Debug/net8.0/NLog.config
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/bin/Debug/net8.0/HostingLib.deps.json
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/bin/Debug/net8.0/HostingLib.runtimeconfig.json
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/bin/Debug/net8.0/HostingLib.dll
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/bin/Debug/net8.0/HostingLib.pdb
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/bin/Debug/net8.0/TCPLib.dll
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/bin/Debug/net8.0/TCPLib.pdb
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/HostingLib.csproj.AssemblyReference.cache
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/HostingLib.GeneratedMSBuildEditorConfig.editorconfig
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/HostingLib.csproj.CoreCompileInputs.cache
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/HostingLib.sourcelink.json
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/HostingLib.csproj.CopyComplete
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/HostingLib.dll
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/refint/HostingLib.dll
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/HostingLib.pdb
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/HostingLib.genruntimeconfig.cache
+/home/everm0re/server/File-hosting/src/File-hosting/HostingLib/obj/Debug/net8.0/ref/HostingLib.dll

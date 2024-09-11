@@ -1,0 +1,12 @@
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/bin/Debug/net8.0/TCPLib.deps.json
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/bin/Debug/net8.0/TCPLib.dll
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/bin/Debug/net8.0/TCPLib.pdb
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/TCPLib.GeneratedMSBuildEditorConfig.editorconfig
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/TCPLib.AssemblyInfoInputs.cache
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/TCPLib.AssemblyInfo.cs
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/TCPLib.csproj.CoreCompileInputs.cache
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/TCPLib.sourcelink.json
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/TCPLib.dll
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/refint/TCPLib.dll
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/TCPLib.pdb
+/home/everm0re/server/File-hosting/src/File-hosting/TCPLib/obj/Debug/net8.0/ref/TCPLib.dll
