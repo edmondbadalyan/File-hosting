@@ -17,7 +17,7 @@ namespace HostingLib.Controllers
 
         public EncryptionController(byte[] _key, byte[] _iv)
         {
-            ValidateKeyAndIv(key, iv);
+            ValidateKeyAndIv(_key, _iv);
             key = _key;
             iv = _iv;
         }

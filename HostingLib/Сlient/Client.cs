@@ -61,6 +61,29 @@ namespace HostingLib.Сlient
             }
         }
 
+        public static async Task<TimeSpan> GetAutoDeletionTimeAsync(TcpClient server, User user)
+        {
+            CancellationTokenSource cts = new();
+            var (key, iv) = EncryptionController.GenerateKeyAndIv();
+            EncryptionController encryption_controller = new(key, iv);
+
+            try
+            {
+                ClientEncryptionHelper encryption_helper = new(server, key, iv, cts.Token);
+
+                UserPayload appended_request_payload = new(encryption_controller.EncryptData(JsonConvert.SerializeObject(user)), null, null, false, null);
+                Request appended_request = new(Requests.USER_AUTO_DELETE_TIME, Payloads.USER, JsonConvert.SerializeObject(appended_request_payload));
+
+                Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, appended_request, cts.Token);
+
+                return JsonConvert.DeserializeObject<TimeSpan>(response.Payload);
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                throw;
+            }
+        }
+
         public static async Task<User> GetUserAsync(TcpClient server, string email) 
         {
             CancellationTokenSource cts = new();
@@ -231,7 +254,7 @@ namespace HostingLib.Сlient
 
         #region File
 
-        public static async Task<Response> UploadFileAsync(TcpClient server, string from_file_path, User user, Data.Entities.File? parent, bool isPublic)
+        public static async Task<Response> UploadFileAsync(TcpClient server, string from_file_path, User user, Data.Entities.File? parent, bool isPublic, IProgress<double> progress = null)
         {
             CancellationTokenSource cts = new();
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
@@ -259,7 +282,12 @@ namespace HostingLib.Сlient
                     return response;
                 }
 
-                await FileController.UploadFileAsync(server, from_file_path, cts.Token);
+                var progress_handler = new Progress<double>(value =>
+                {
+                    progress?.Report(value);
+                });
+
+                await FileController.UploadFileAsync(server, from_file_path, cts.Token, progress_handler);
                 response = await ResponseController.ReceiveResponseAsync(server, cts.Token);
                 return response;
      
@@ -272,7 +300,7 @@ namespace HostingLib.Сlient
 
         }
 
-        public static async Task DownloadFileAsync(TcpClient server, string to_file_path, Data.Entities.File file, User user)
+        public static async Task DownloadFileAsync(TcpClient server, string to_file_path, Data.Entities.File file, User user, IProgress<double> progress = null)
         {
             CancellationTokenSource cts = new CancellationTokenSource();
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
@@ -293,7 +321,12 @@ namespace HostingLib.Сlient
                 }
                 else
                 {
-                    await FileController.DownloadFileAsync(server, to_file_path, user.Id, null, cts.Token);
+                    var progress_handler = new Progress<double>(value =>
+                    {
+                        progress?.Report(value);
+                    });
+
+                    await FileController.DownloadFileAsync(server, to_file_path, user.Id, null, cts.Token, progress_handler);
                     response = await ResponseController.ReceiveResponseAsync(server, cts.Token);
                     Console.WriteLine(response.Payload);
                 }

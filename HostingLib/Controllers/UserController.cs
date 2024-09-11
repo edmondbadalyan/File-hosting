@@ -38,6 +38,31 @@ namespace HostingLib.Controllers
             }
         }
 
+        public static async Task<TimeSpan> GetAutoDeletionTimeAsync(int user_id, CancellationToken token)
+        {
+            string cache_key = $"{CachePrefix}delete_time:{user_id}";
+
+            TimeSpan? cached_space = await CachedDataController.GetValueAsync<TimeSpan>(cache_key);
+
+            if (cached_space.HasValue && cached_space.Value != default)
+            {
+                LoggingController.LogInfo($"UserController.GetAvailableSpaceAsync - Cache hit for user {user_id} with available space {cached_space.Value}");
+                return cached_space.Value;
+            }
+
+            try
+            {
+                HostingDbContext context = new();
+
+                return await context.Users.Where(u => u.Id == user_id).Select(u => u.AutoFileDeletionTime).SingleAsync(token);
+            }
+            catch (Exception ex)
+            {
+                LoggingController.LogError($"UserController.GetAvailableSpaceAsync - Error calculating available space for user {user_id}: {ex.Message}");
+                throw;
+            }
+        }
+
         private static async Task<long> CalculateAvailableSpaceAsync(int user_id, CancellationToken token)
         {
             using HostingDbContext context = new();

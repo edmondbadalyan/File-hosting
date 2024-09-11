@@ -217,6 +217,28 @@ namespace HostingLib.Handlers
         }
     }
 
+    public class GetAutoDeletionTimeHandler : IRequestHandler<Response>
+    {
+        public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)
+        {
+            try
+            {
+                UserPayload payload = JsonConvert.DeserializeObject<UserPayload>(request.Payload);
+                User user = JsonConvert.DeserializeObject<User>(payload.User);
+                TimeSpan deletion_time = await UserController.GetAutoDeletionTimeAsync(user.Id, token);
+                return new(Responses.Success, Payloads.USER, deletion_time.ToString());
+            }
+            catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, "Operation was canceled");
+            }
+            catch (Exception ex)
+            {
+                return new Response(Responses.Fail, Payloads.MESSAGE, ex.Message);
+            }
+        }
+    }
+
     public class CreateUserHandler : IRequestHandler<Response>
     {
         public async Task<Response> HandleAsync(ClientState state, Request request, CancellationToken token)

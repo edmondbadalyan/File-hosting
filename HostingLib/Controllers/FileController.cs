@@ -26,7 +26,7 @@ namespace HostingLib.Controllers
 
         #region File
 
-        public static async Task UploadFileAsync(TcpClient client, string? file_path, CancellationToken token)
+        public static async Task UploadFileAsync(TcpClient client, string? file_path, CancellationToken token, IProgress<double> progress = null)
         {
             using FileStream uploaded_file = new(file_path, FileMode.Open, FileAccess.Read);
             try
@@ -35,7 +35,7 @@ namespace HostingLib.Controllers
                 long file_length = uploaded_file.Length;
 
                 LoggingController.LogDebug($"FileController.UploadFileAsync - Started sending file");
-                await TCP.SendFile(client, uploaded_file, file_length, token);
+                await TCP.SendFile(client, uploaded_file, file_length, token, progress);
                 LoggingController.LogDebug($"FileController.UploadFileAsync - File sent successfully");
             }
             catch (Exception ex)
@@ -47,7 +47,7 @@ namespace HostingLib.Controllers
             }
         }
 
-        public static async Task DownloadFileAsync(TcpClient client, string? file_path, int user_id, int? parent_id, CancellationToken token)
+        public static async Task DownloadFileAsync(TcpClient client, string? file_path, int user_id, int? parent_id, CancellationToken token, IProgress<double> progress = null)
         {
             using FileStream new_file = System.IO.File.Create(file_path);
             try
@@ -56,7 +56,7 @@ namespace HostingLib.Controllers
 
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - Started receiving file");
 
-                await TCP.ReceiveFile(client, new_file, token);
+                await TCP.ReceiveFile(client, new_file, token, progress);
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - File received successfully");
 
                 await CachedDataController.RemoveCacheAsync($"{UserController.CachePrefix}space:{user_id}");

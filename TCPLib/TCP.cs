@@ -65,7 +65,7 @@ namespace TCPLib
             await Console.Out.WriteLineAsync("File sent successfully");
         }
 
-        public static async Task SendFile(TcpClient client, Stream file, long length, CancellationToken token)
+        public static async Task SendFile(TcpClient client, Stream file, long length, CancellationToken token, IProgress<double> progress = null)
         {
             await Console.Out.WriteLineAsync("Started sending file");
 
@@ -82,6 +82,8 @@ namespace TCPLib
                 int read = await file.ReadAsync(buffer, 0, (int)Math.Min(buffer.Length, length - pos), token);
                 await client.GetStream().WriteAsync(buffer, 0, read, token);
                 pos += read;
+
+                progress?.Report((double)pos / length * 100);
             }
             await Console.Out.WriteLineAsync("File sent successfully");
         }
@@ -166,7 +168,7 @@ namespace TCPLib
             return System.Text.Encoding.UTF8.GetString(string_buffer);
         }
 
-        public static async Task ReceiveFile(TcpClient client, Stream file, CancellationToken token)
+        public static async Task ReceiveFile(TcpClient client, Stream file, CancellationToken token, IProgress<double> progress = null)
         {
             token.ThrowIfCancellationRequested();
 
@@ -183,6 +185,8 @@ namespace TCPLib
                 int read = await client.GetStream().ReadAsync(buffer, 0, (int)Math.Min(length - pos, buffer.Length), token);
                 await file.WriteAsync(buffer, 0, read, token);
                 pos += read;
+
+                progress?.Report((double)pos / length * 100);
             }
             await Console.Out.WriteLineAsync($"Received {length} bytes");
         }

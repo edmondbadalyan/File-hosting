@@ -105,6 +105,7 @@ namespace HostingLib.Classes
         ENCRYPTED_DATA,
 
         USER_SPACE,
+        USER_AUTO_DELETE_TIME,
         USER_CREATE,
         USER_GET,
         USER_AUTHENTICATE,
