@@ -25,9 +25,9 @@ Task deletion_task = Task.Run(async () => await FileDeletionHelper.RunAsync(cts.
 
 AppDomain.CurrentDomain.ProcessExit += (s, e) => cts.Cancel();
 
-if (!Directory.Exists(FileController.storage_path))
+if (!Directory.Exists(FileController.StoragePath))
 {
-    Directory.CreateDirectory(FileController.storage_path);
+    Directory.CreateDirectory(FileController.StoragePath);
 }
 
 while (true)
