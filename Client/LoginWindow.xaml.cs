@@ -1,5 +1,4 @@
 ﻿using HostingLib.Data.Entities;
-using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 using ClientCommands = HostingLib.Сlient.Client;

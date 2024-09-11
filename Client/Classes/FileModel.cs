@@ -1,29 +1,22 @@
 ﻿using HostingLib.Data.Entities;
-using Prism.Mvvm;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Client
-{
+namespace Client {
     public class FileModel : BindableBase
     {
         public File File { get; set; }
         public string FileName { get; set; }
+        public DateTime LastChangeDate { get; set; }
+        public string Weight { get; set; }
         public string Extension { get; set; }
-
-        public bool isSelected;
-        public bool IsSelected {
-            get => isSelected;
-            set => SetProperty(ref isSelected, value);
-        }
+        public bool IsPublic { get; set; }
 
         public FileModel(File file) {
             File = file;
-            IsSelected = false;
             FileName = System.IO.Path.GetFileName(File.Path);
+
+            LastChangeDate = File.ChangeDate;
+            Weight = Utilities.FormatBytes(File.Size);
+            IsPublic = File.IsPublic;
 
             if (File.Path.EndsWith("\\")) {
                 Extension = "";

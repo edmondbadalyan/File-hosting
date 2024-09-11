@@ -10,6 +10,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TCPLib", "TCPLib\TCPLib.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_Server", "Test_Server\Test_Server.csproj", "{AC384F87-ABE0-449F-BE81-DD0985BF2602}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csproj", "{C4384FE5-8EAF-4B26-A2E8-A7EF55782D72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{AC384F87-ABE0-449F-BE81-DD0985BF2602}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC384F87-ABE0-449F-BE81-DD0985BF2602}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC384F87-ABE0-449F-BE81-DD0985BF2602}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4384FE5-8EAF-4B26-A2E8-A7EF55782D72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4384FE5-8EAF-4B26-A2E8-A7EF55782D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4384FE5-8EAF-4B26-A2E8-A7EF55782D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4384FE5-8EAF-4B26-A2E8-A7EF55782D72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

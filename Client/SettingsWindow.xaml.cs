@@ -1,28 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
     /// <summary>
     /// Логика взаимодействия для SettingsWindow.xaml
     /// </summary>
     public partial class SettingsWindow : Window {
-        MainWindow mainWindow;
+        SettingsWindowModel Model { get; set; }
 
-        public SettingsWindow(MainWindow mainWindow) {
+        public SettingsWindow(SettingsWindowModel model) {
             InitializeComponent();
             
-            this.mainWindow = mainWindow;
+            this.Model = model;
+        }
+
+        private void Button_LightTheme(object sender, RoutedEventArgs e) => Model.IsDark = false;
+        private void Button_DarkTheme(object sender, RoutedEventArgs e) => Model.IsDark = true;
+
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+            await Task.Run(async () => await ClientCommands.UpdateUserPublicityAsync(Model.Client, Model.User, Model.Publicity));
         }
     }
 }

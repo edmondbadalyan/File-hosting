@@ -1,20 +1,7 @@
-﻿using HostingLib.Classes;
-using HostingLib.Controllers;
-using HostingLib.Data.Entities;
+﻿using HostingLib.Data.Entities;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using System.Windows.Forms;
 using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
@@ -41,7 +28,7 @@ namespace Client {
                 whereto = folderDialog.FolderName;
             }
 
-            IReadOnlyList<File> files = Model.Files.Where(File => File.IsSelected).Select(FileModel => FileModel.File).ToArray();
+            IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {
                 await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.Client, System.IO.Path.Combine(whereto, file.Name), file, Model.User));
             }
@@ -50,26 +37,31 @@ namespace Client {
         }
 
         private async void Button_Upload(object sender, RoutedEventArgs e) {
-            List<string> wherefrom = new List<string>();
+            List<string> fileNames = new List<string>();
+            bool isPublic = false;
             OpenFileDialog fileDialog = new OpenFileDialog();
             if (fileDialog.ShowDialog() == true) {
-                wherefrom = fileDialog.FileNames.ToList();
+                fileNames = fileDialog.FileNames.ToList();
             }
+            if (System.Windows.Forms.MessageBox.Show("Сделать файлы публичными?", "Сделать файлы публичными?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                isPublic = true;
 
-            foreach (string file in wherefrom) {
-                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User));
+            File? whereto = Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId);
+            if (whereto is null) return;
+            foreach (string file in fileNames) {
+                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User, whereto, isPublic));
             }
 
             await Model.Update();
         }
 
         private void Button_Create(object sender, RoutedEventArgs e) {
-            CreateWindow window = new CreateWindow(mainWindow, new(Model.FolderPath));
+            CreateWindow window = new CreateWindow(mainWindow, new(Model.AllFiles.First(File => File.Id == Model.SelectedFolderId), Model.User));
             window.ShowDialog();
         }
 
         private async void Button_Delete(object sender, RoutedEventArgs e) {
-            IReadOnlyList<File> files = Model.Files.Where(File => File.IsSelected).Select(FileModel => FileModel.File).ToArray();
+            IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {
                 await Task.Run(async () => await ClientCommands.DeleteFileAsync(Model.Client, file));
             }
@@ -78,14 +70,69 @@ namespace Client {
         }
 
         private async void Button_DeletedFiles(object sender, RoutedEventArgs e) {
-            // здесь будет запрос на получение файлов из папки "удалённых"
+            await Task.Run (() => Model.Files = Model.AllFiles.Where(File => File.IsDeleted).Select((File) => new FileModel(File)).ToList());
         }
 
         private void Button_Settings(object sender, RoutedEventArgs e) {
-            SettingsWindow window = new SettingsWindow(mainWindow);
+            SettingsWindow window = new SettingsWindow(new (Model.User, Model.Client));
             window.ShowDialog();
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => mainWindow.GoBack(this);
+        private void Button_Open(object sender, RoutedEventArgs e) {
+            if (dg.SelectedItems.Count == 1) {
+                FileModel file = dg.SelectedItems.Cast<FileModel>().First();
+                if (file.Extension == "") {
+                    Model.SelectedFolderId = file.File.Id;
+                }
+                else {
+                    // предпросмотр
+                }
+            }
+        }
+
+        private void Button_Exit(object sender, RoutedEventArgs e) => Close();
+
+        private async void Button_Search(object sender, RoutedEventArgs e) {
+            if (Model.Search == "" || !System.IO.Path.Exists(Model.Search)) {
+                System.Windows.Forms.MessageBox.Show("Введите путь");
+                return;
+            }
+            File? file = Model.AllFiles.FirstOrDefault(File => File.Path == Model.Search);
+            if (file is null) {
+                System.Windows.Forms.MessageBox.Show("Некорректный путь");
+                return;
+            }
+
+            if (file.IsDirectory) {
+                Model.SelectedFolderId = file.Id;
+                await Model.Update();
+            }
+            else {
+                // предпросмотр
+            }
+        }
+
+        private void Button_Others(object sender, RoutedEventArgs e) {
+            PublicFilesWindow window = new PublicFilesWindow(this, new(Model.User, Model.Client));
+            this.Visibility = Visibility.Hidden;
+            window.ShowDialog();
+        }
+
+        private async void Button_Back(object sender, RoutedEventArgs e) {
+            int? id = Model.AllFiles.First(File => File.Id == Model.SelectedFolderId).ParentId;
+            if (id.HasValue) Model.SelectedFolderId = id.Value;
+            else Model.SelectedFolderId = null;
+            await Model.Update();
+        }
+
+        private async void Button_Root(object sender, RoutedEventArgs e) {
+            Model.SelectedFolderId = null;
+            await Model.Update();
+        }
+
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+            await Model.UpdatePublicity();
+            mainWindow.GoBack(this);
+        }
     }
 }
