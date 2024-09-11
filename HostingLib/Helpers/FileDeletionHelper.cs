@@ -11,7 +11,7 @@ namespace HostingLib.Helpers
 {
     public static class FileDeletionHelper
     {
-        private readonly TimeSpan delay = TimeSpan.FromMinutes(1);
+        private readonly static TimeSpan delay = TimeSpan.FromMinutes(1);
         public static async Task RunAsync(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
