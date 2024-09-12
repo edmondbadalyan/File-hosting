@@ -289,7 +289,7 @@ namespace HostingLib.Controllers
             try
             {
                 token.ThrowIfCancellationRequested();
-                string new_path = Path.Combine(StoragePath, "Deleted", file.Name);
+                string new_path = Path.Combine(StoragePath, file.UserId.ToString(), "Deleted", file.Name);
 
                 LoggingController.LogDebug($"FileController.DeleteFile - Moving file {file.Name} to {new_path}");
                 System.IO.File.Move(file.Path, new_path);
@@ -559,7 +559,7 @@ namespace HostingLib.Controllers
                 token.ThrowIfCancellationRequested();
 
                 await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
-                string new_folder_path = Path.Combine(StoragePath, "Deleted", folder.Name);
+                string new_folder_path = Path.Combine(StoragePath, folder.UserId.ToString(), "Deleted", folder.Name);
 
                 LoggingController.LogDebug($"FileController.DeleteFolder - moving folder {folder.Name} to {new_folder_path}");
                 Directory.Move(folder.Path, new_folder_path);

@@ -152,7 +152,7 @@ namespace HostingLib.Handlers
                             int user_id = 0;
                             string parent_id = null;
 
-                            appended_request_payload = JsonConvert.DeserializeObject<FilePayload>(appended_request.Payload);
+                            appended_request_payload = JsonConvert.DeserializeObject<FolderPayload>(appended_request.Payload);
 
                             if(appended_request_payload.Folder != null)
                             {
