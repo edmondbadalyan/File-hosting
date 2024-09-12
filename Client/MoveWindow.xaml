@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
-        Title="Сменить пароль" Height="300" Width="350">
+        Title="Сменить пароль" Height="200" Width="350">
     <StackPanel>
         <TextBlock Margin="10">Новый пароль:</TextBlock>
         <ComboBox ItemsSource="{Binding AllPaths}"

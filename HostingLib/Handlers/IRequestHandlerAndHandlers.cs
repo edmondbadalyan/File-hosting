@@ -508,11 +508,15 @@ namespace HostingLib.Handlers
         {
             try
             {
-                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
+                var settings = new JsonSerializerSettings() {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                };
+
+                FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload, settings);
 
                 IList<Data.Entities.File> files = await FileController.GetAllFiles(payload.UserId, token);
 
-                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files));
+                return new(Responses.Success, Payloads.FILE, JsonConvert.SerializeObject(files, settings));
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
             {
@@ -680,7 +684,7 @@ namespace HostingLib.Handlers
             try
             {
                 FolderPayload payload = JsonConvert.DeserializeObject<FolderPayload>(request.Payload);
-                int? parent_id = JsonConvert.DeserializeObject<int?>(payload.ParentId);
+                int? parent_id = payload.ParentId is null ? null : int.Parse(payload.ParentId);
                 await FileController.CreateFolder(payload.FolderName, payload.UserId, parent_id, payload.IsPublic, token);
 
                 return new(Responses.Success, Payloads.MESSAGE, "Folder created successfully!");

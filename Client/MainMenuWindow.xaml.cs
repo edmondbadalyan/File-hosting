@@ -61,7 +61,8 @@ namespace Client {
 
         private async void Button_Move(object sender, RoutedEventArgs e) {
             IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
-            MoveWindow window = new MoveWindow(mainWindow, new(Model.User, Model.Client, files, Model.AllFilesString.Where(file => file[^1] == '\\').ToList()));
+            List<string> folders = Model.AllFiles.Where(file => file.IsDirectory).Select(file => file.Path).ToList();
+            MoveWindow window = new MoveWindow(mainWindow, new(Model.User, Model.Client, files, folders));
             window.ShowDialog();
 
             await Model.Update();
@@ -70,7 +71,10 @@ namespace Client {
         private async void Button_Delete(object sender, RoutedEventArgs e) {
             IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {
-                await Task.Run(async () => await ClientCommands.DeleteFileAsync(Model.Client, file));
+                if (file.IsDirectory) 
+                    await Task.Run(async () => await ClientCommands.DeleteFolderAsync(Model.Client, file));
+                else
+                    await Task.Run(async () => await ClientCommands.DeleteFileAsync(Model.Client, file));
             }
 
             await Model.Update();
@@ -85,11 +89,12 @@ namespace Client {
             window.ShowDialog();
         }
 
-        private void Button_Open(object sender, RoutedEventArgs e) {
+        private async void Button_Open(object sender, RoutedEventArgs e) {
             if (dg.SelectedItems.Count == 1) {
                 FileModel file = dg.SelectedItems.Cast<FileModel>().First();
-                if (file.Extension == "") {
+                if (file.Extension == ".*") {
                     Model.SelectedFolderId = file.File.Id;
+                    await Model.Update();
                 }
                 else {
                     // предпросмотр

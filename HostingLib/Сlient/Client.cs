@@ -76,7 +76,8 @@ namespace HostingLib.Сlient
 
                 Response response = await encryption_helper.ExchangeEncryptedDataAsync(server, appended_request, cts.Token);
 
-                return JsonConvert.DeserializeObject<TimeSpan>(response.Payload);
+                return TimeSpan.Parse(response.Payload);
+                //return JsonConvert.DeserializeObject<TimeSpan>(response.Payload);
             }
             catch (Exception ex) when (ex is TaskCanceledException || ex is OperationCanceledException)
             {

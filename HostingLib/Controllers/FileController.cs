@@ -180,7 +180,7 @@ namespace HostingLib.Controllers
                 token.ThrowIfCancellationRequested();
                 LoggingController.LogDebug($"FileController.GetPublicFiles - Fetching all public files for user {user_id}");
                 IList<Data.Entities.File> files = await context.Files
-                    .Where(f => f.UserId == user_id && f.IsPublic && !f.IsDirectory)
+                    .Where(f => f.UserId == user_id && f.IsPublic && !f.IsDirectory && !f.IsDeleted)
                     .ToListAsync(token);
 
                 LoggingController.LogInfo($"FileController.GetPublicFiles - Found {files.Count} files for user {user_id}");
@@ -249,6 +249,7 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.MoveFile - File {file.Id} {file.Name} moved successfully to {new_path}");
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}all:{file.UserId}");
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}{file.UserId}:{file.ParentId}");
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}{file.UserId}:{new_folder.ParentId}");
                 LoggingController.LogDebug($"FileController.MoveFile - Cleaned up cache");
@@ -551,28 +552,28 @@ namespace HostingLib.Controllers
             }
         }
 
-        public static async Task DeleteFolder(Data.Entities.File folder, CancellationToken token)
-        {
+        public static async Task DeleteFolder(Data.Entities.File folder, CancellationToken token) {
             using HostingDbContext context = new();
-            try
-            {
+            try {
                 token.ThrowIfCancellationRequested();
 
-                await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
+                // Load children explicitly to avoid duplicates and check for tracking issues
+                await LoadChildrenDistinctAsync(folder, context, token);
+
                 string new_folder_path = Path.Combine(StoragePath, folder.UserId.ToString(), "Deleted", folder.Name);
 
                 LoggingController.LogDebug($"FileController.DeleteFolder - moving folder {folder.Name} to {new_folder_path}");
                 Directory.Move(folder.Path, new_folder_path);
                 folder.Path = new_folder_path;
                 folder.IsDeleted = true;
-                 
+
                 User user = await UserController.GetUserByIdAsync(folder.UserId, token);
 
                 await DeleteChildren(folder.Children, new_folder_path, context, user, token);
 
                 context.Update(folder);
                 await context.SaveChangesAsync(token);
-                
+
                 await CachedDataController.ScheduleFileDeletionAsync(folder.Id.ToString(), user.AutoFileDeletionTime);
 
                 LoggingController.LogInfo($"FileController.DeleteFolder - folder {folder.Name} moved to deleted successfully");
@@ -581,30 +582,45 @@ namespace HostingLib.Controllers
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}{folder.UserId}:{folder.ParentId}");
                 LoggingController.LogDebug($"FileController.DeleteFolder - Cleaned up cache");
             }
-            finally
-            {
+            finally {
                 await context.DisposeAsync();
             }
         }
-        public static async Task DeleteChildren(ICollection<Data.Entities.File> children, string path, HostingDbContext context, User user, CancellationToken token)
-        {
-            foreach (Data.Entities.File child in children)
-            {
+
+        private static async Task LoadChildrenDistinctAsync(Data.Entities.File folder, HostingDbContext context, CancellationToken token) {
+            // Use explicit loading with distinct
+            await context.Entry(folder)
+                         .Collection(f => f.Children)
+                         .Query()
+                         .AsNoTracking() // Ensures entities are not tracked multiple times
+                         .Distinct()
+                         .LoadAsync(token);
+        }
+
+        public static async Task DeleteChildren(ICollection<Data.Entities.File> children, string path, HostingDbContext context, User user, CancellationToken token) {
+            foreach (Data.Entities.File child in children) {
                 token.ThrowIfCancellationRequested();
 
                 string new_path = Path.Combine(path, child.Name);
                 child.IsDeleted = true;
-                Directory.Move(child.Path, new_path);
+
+                // Use try-catch to prevent errors during the move and ensure uniqueness
+                try {
+                    Directory.Move(child.Path, new_path);
+                }
+                catch (IOException ex) {
+                    LoggingController.LogError($"Error moving file {child.Path} to {new_path}: {ex.Message}");
+                    continue; // Skip if move fails
+                }
+
                 child.Path = new_path;
                 context.Files.Update(child);
                 await CachedDataController.ScheduleFileDeletionAsync(child.Id.ToString(), user.AutoFileDeletionTime);
 
-
                 LoggingController.LogInfo($"FileController.DeleteChildren - file {child.Id} {child.Name} marked as deleted and moved to {child.Path}");
 
-                if (child.IsDirectory)
-                {
-                    await context.Entry(child).Collection(f => f.Children).LoadAsync(token);
+                if (child.IsDirectory) {
+                    await LoadChildrenDistinctAsync(child, context, token); // Recursively load distinct children
                     await DeleteChildren(child.Children, child.Path, context, user, token);
                 }
             }

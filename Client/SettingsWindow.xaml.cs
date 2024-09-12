@@ -13,7 +13,9 @@ namespace Client {
         public SettingsWindow(MainWindow window, SettingsWindowModel model) {
             InitializeComponent();
             this.window = window;
-            this.Model = model;
+            Model = model;
+
+            DataContext = Model;
         }
 
         private void Button_LightTheme(object sender, RoutedEventArgs e) => window.Config.Theme = "light";

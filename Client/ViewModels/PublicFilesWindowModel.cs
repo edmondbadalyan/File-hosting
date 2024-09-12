@@ -55,6 +55,7 @@ namespace Client {
         }
 
         public async Task Update() {
+            if (FoundUser is null) return;
             AllFiles = (List<File>)await Task.Run(async () => await ClientCommands.GetPublicFilesAsync(Client, FoundUser));
             Files = AllFiles.Where(File => File.ParentId == SelectedFolderId).Select((File) => new FileModel(File)).ToList();
         }

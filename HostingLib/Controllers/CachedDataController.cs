@@ -16,12 +16,18 @@ namespace HostingLib.Controllers
     {
         public static async Task SetValueAsync<T>(string key, T value, TimeSpan? expiration = null)
         {
-            await RedisConnectionHelper.db.StringSetAsync(key, JsonConvert.SerializeObject(value), expiration);
+            var settings = new JsonSerializerSettings() {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
+            await RedisConnectionHelper.db.StringSetAsync(key, JsonConvert.SerializeObject(value, settings), expiration);
             LoggingController.LogInfo($"CachedDataController.SetValueAsync - Set data at key {key} with expiration date {expiration}");
         }
 
         public static async Task<T> GetValueAsync<T>(string key)
         {
+            var settings = new JsonSerializerSettings() {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
             string json = await RedisConnectionHelper.db.StringGetAsync(key);
             if (json.IsNullOrEmpty())
             {
@@ -29,7 +35,7 @@ namespace HostingLib.Controllers
                 return default;
             }
             LoggingController.LogInfo($"CachedDataController.SetValueAsync - Getting data at key {key} - data found");
-            return JsonConvert.DeserializeObject<T>(json);
+            return JsonConvert.DeserializeObject<T>(json, settings);
         }
 
         public static async Task RemoveCacheAsync(string key)

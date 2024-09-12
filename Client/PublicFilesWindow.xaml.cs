@@ -35,11 +35,12 @@ namespace Client {
             await Model.Update();
         }
 
-        private void Button_Open(object sender, RoutedEventArgs e) {
+        private async void Button_Open(object sender, RoutedEventArgs e) {
             if (dg.SelectedItems.Count == 1) {
                 FileModel file = dg.SelectedItems.Cast<FileModel>().First();
-                if (file.Extension == "") {
+                if (file.Extension == ".*") {
                     Model.SelectedFolderId = file.File.Id;
+                    await Model.Update();
                 }
                 else {
                     // предпросмотр
@@ -68,7 +69,7 @@ namespace Client {
         }
 
         private async void Button_UserSearch(object sender, RoutedEventArgs e) {
-            if (Model.Search == "" || !Utilities.ValidateEmail(Model.UserSearch)) {
+            if (Model.UserSearch == "" || !Utilities.ValidateEmail(Model.UserSearch)) {
                 System.Windows.Forms.MessageBox.Show("Введите email пользователя");
                 return;
             }
