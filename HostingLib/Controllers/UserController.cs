@@ -38,6 +38,23 @@ namespace HostingLib.Controllers
             }
         }
 
+        private static async Task<long> CalculateAvailableSpaceAsync(int user_id, CancellationToken token)
+        {
+            using HostingDbContext context = new();
+            token.ThrowIfCancellationRequested();
+
+            long user_space = await context.Files
+                .Where(f => f.UserId == user_id)
+                .SumAsync(f => f.Size, token);
+
+            long available_space = UserQuota - user_space;
+            string cacheKey = $"{CachePrefix}space:{user_id}";
+            await CachedDataController.SetValueAsync(cacheKey, available_space);
+
+            LoggingController.LogInfo($"UserController.CalculateAvailableSpaceAsync - Calculated available space for user {user_id}: {available_space}");
+            return available_space;
+        }
+
         public static async Task<TimeSpan> GetAutoDeletionTimeAsync(int user_id, CancellationToken token)
         {
             string cache_key = $"{CachePrefix}delete_time:{user_id}";
@@ -63,22 +80,6 @@ namespace HostingLib.Controllers
             }
         }
 
-        private static async Task<long> CalculateAvailableSpaceAsync(int user_id, CancellationToken token)
-        {
-            using HostingDbContext context = new();
-            token.ThrowIfCancellationRequested();
-
-            long user_space = await context.Files
-                .Where(f => f.UserId == user_id)
-                .SumAsync(f => f.Size, token);
-
-            long available_space = UserQuota - user_space;
-            string cacheKey = $"{CachePrefix}space:{user_id}";
-            await CachedDataController.SetValueAsync(cacheKey, available_space);
-
-            LoggingController.LogInfo($"UserController.CalculateAvailableSpaceAsync - Calculated available space for user {user_id}: {available_space}");
-            return available_space;
-        }
 
         public static async Task<User> GetUserAsync(string email, CancellationToken token)
         {

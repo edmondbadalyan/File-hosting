@@ -27,6 +27,7 @@ namespace HostingLib.Controllers
             { Requests.ENCRYPTED_DATA, new EncryptedDataHandler() },
 
             { Requests.USER_SPACE, new AvailableSpaceHandler() },
+            { Requests.USER_AUTO_DELETE_TIME, new GetAutoDeletionTimeHandler() },
             { Requests.USER_CREATE, new CreateUserHandler() },
             { Requests.USER_GET, new GetUserHandler() },
             { Requests.USER_AUTHENTICATE, new AuthenticateUserHandler() },
