@@ -48,15 +48,15 @@ namespace Client {
         private async void Button_Login(object sender, RoutedEventArgs e) {
             if (!CheckEmail() || !CheckPassword()) return;
 
-            User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, Model.Email));
+            User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(MainWindow.Server, Model.Email));
             if (user is null) {
                 MessageBox.Show("Incorrect data");
                 return;
             }
-            await Task.Run(async () => await ClientCommands.AuthenticateUserAsync(mainWindow.Server, user, PasswordBox.Password));
+            await Task.Run(async () => await ClientCommands.AuthenticateUserAsync(MainWindow.Server, user, PasswordBox.Password));
 
 
-            MainMenuWindow window = new MainMenuWindow(mainWindow, new(user, mainWindow.Server));
+            MainMenuWindow window = new MainMenuWindow(mainWindow, new(user, MainWindow.Server));
             this.Visibility = Visibility.Hidden;
             window.ShowDialog();
         }

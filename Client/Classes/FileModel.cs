@@ -1,4 +1,5 @@
 ﻿using HostingLib.Data.Entities;
+using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
     public class FileModel : BindableBase
@@ -8,7 +9,15 @@ namespace Client {
         public DateTime LastChangeDate { get; set; }
         public string Weight { get; set; }
         public string Extension { get; set; }
-        public bool IsPublic { get; set; }
+
+        private bool isPublic;
+        public bool IsPublic {
+            get => isPublic;
+            set {
+                SetProperty(ref isPublic, value);
+                Update(value);
+            }
+        }
 
         public FileModel(File file) {
             File = file;
@@ -16,7 +25,7 @@ namespace Client {
 
             LastChangeDate = File.ChangeDate;
             Weight = Utilities.FormatBytes(File.Size);
-            IsPublic = File.IsPublic;
+            isPublic = File.IsPublic;
 
             if (File.Path.EndsWith("\\")) {
                 Extension = "";
@@ -25,6 +34,10 @@ namespace Client {
                 Extension = System.IO.Path.GetExtension(File.Path);
                 if (Extension == "") Extension = ".*";
             }
+        }
+
+        private async void Update(bool publicity) {
+            await Task.Run(async () => await ClientCommands.UpdateFilePublicity(MainWindow.Server, File, publicity));
         }
     }
 }

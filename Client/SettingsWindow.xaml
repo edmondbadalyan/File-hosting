@@ -76,9 +76,9 @@
                 </UniformGrid>
                 <UniformGrid>
                     <TextBlock FontSize="12" Text="Частота автообновления:"></TextBlock>
-                    <xctk:TimePicker Language="ru"
+                    <xctk:TimeSpanUpDown Language="ru"                                     
                                      Value="{Binding PublicityTimeout}"
-                                     ></xctk:TimePicker>
+                                     ></xctk:TimeSpanUpDown>
                 </UniformGrid>
             </StackPanel>
         </GroupBox>

@@ -32,10 +32,7 @@ namespace Client {
         private int? selectedFolderId;
         public int? SelectedFolderId {
             get => selectedFolderId;
-            set {
-                Task.Run(() =>UpdatePublicity());
-                SetProperty(ref selectedFolderId, value);
-            }
+            set => SetProperty(ref selectedFolderId, value);
         }
 
         public MainMenuWindowModel(User user, TcpClient client) {
@@ -49,14 +46,8 @@ namespace Client {
         }
 
         public async Task Update() {
-            await UpdatePublicity();
             AllFiles = (List<File>) await Task.Run(async () => await ClientCommands.GetAllFilesAsync(Client, User));
-            Files = AllFiles.Where(File => File.ParentId == SelectedFolderId).Select((File) => new FileModel(File)).ToList();
-        }
-
-        public async Task UpdatePublicity() {
-            foreach (FileModel file in Files)
-                await Task.Run(async () => await ClientCommands.UpdateFilePublicity(Client, file.File, file.IsPublic));
+            Files = AllFiles.Where(File => File.ParentId == SelectedFolderId && !File.IsDeleted).Select((File) => new FileModel(File)).ToList();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Client {
     public partial class MainWindow : Window {
         LoginWindow login;
         RegisterWindow register;
-        public TcpClient Server { get; set; }
+        public static TcpClient Server { get; set; }
         public ConfigController Config { get; set; }
 
         public MainWindow() {

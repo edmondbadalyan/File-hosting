@@ -73,10 +73,10 @@ namespace Client {
 
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             if (Model.IsFromRegistration && Model.Code != Model.CodeInput) {
-                User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(mainWindow.Server, Model.Email));
+                User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(MainWindow.Server, Model.Email));
 
                 if (user is not null) {
-                    await Task.Run(async () => { await ClientCommands.DeleteUserAsync(mainWindow.Server, user); });
+                    await Task.Run(async () => { await ClientCommands.DeleteUserAsync(MainWindow.Server, user); });
                 }
             }
             mainWindow.GoBack(this);

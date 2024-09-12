@@ -1,5 +1,4 @@
-﻿using Client.ViewModels;
-using HostingLib.Data.Entities;
+﻿using HostingLib.Data.Entities;
 using Microsoft.Win32;
 using System.Windows;
 using ClientCommands = HostingLib.Сlient.Client;

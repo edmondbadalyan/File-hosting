@@ -46,7 +46,6 @@ namespace Client {
                 isPublic = true;
 
             File? whereto = Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId);
-            if (whereto is null) return;
             foreach (string file in fileNames) {
                 await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User, whereto, isPublic));
             }
@@ -54,15 +53,18 @@ namespace Client {
             await Model.Update();
         }
 
-        private void Button_Create(object sender, RoutedEventArgs e) {
-            CreateWindow window = new CreateWindow(mainWindow, new(Model.AllFiles.First(File => File.Id == Model.SelectedFolderId), Model.User));
+        private async void Button_Create(object sender, RoutedEventArgs e) {
+            CreateWindow window = new CreateWindow(mainWindow, new(Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId), Model.User));
             window.ShowDialog();
+            await Model.Update();
         }
 
-        private void Button_Move(object sender, RoutedEventArgs e) {
+        private async void Button_Move(object sender, RoutedEventArgs e) {
             IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             MoveWindow window = new MoveWindow(mainWindow, new(Model.User, Model.Client, files, Model.AllFilesString.Where(file => file[^1] == '\\').ToList()));
             window.ShowDialog();
+
+            await Model.Update();
         }
 
         private async void Button_Delete(object sender, RoutedEventArgs e) {
@@ -75,7 +77,7 @@ namespace Client {
         }
 
         private async void Button_DeletedFiles(object sender, RoutedEventArgs e) {
-            await Task.Run (() => Model.Files = Model.AllFiles.Where(File => File.IsDeleted).Select((File) => new FileModel(File)).ToList());
+            await Task.Run (() => Model.Files = Model.AllFiles.Where(File => File.ParentId == Model.SelectedFolderId && File.IsDeleted).Select((File) => new FileModel(File)).ToList());
         }
 
         private void Button_Settings(object sender, RoutedEventArgs e) {
@@ -124,8 +126,8 @@ namespace Client {
         }
 
         private async void Button_Back(object sender, RoutedEventArgs e) {
-            int? id = Model.AllFiles.First(File => File.Id == Model.SelectedFolderId).ParentId;
-            if (id.HasValue) Model.SelectedFolderId = id.Value;
+            File? file = Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId);
+            if (file is not null) Model.SelectedFolderId = file.ParentId;
             else Model.SelectedFolderId = null;
             await Model.Update();
         }
@@ -136,7 +138,6 @@ namespace Client {
         }
 
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
-            await Model.UpdatePublicity();
             mainWindow.GoBack(this);
         }
     }

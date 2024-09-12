@@ -36,11 +36,12 @@ namespace Client {
             User = user;
             Client = client;
             Publicity = user.IsPublic;
-            PublicityTimeout = TimeSpan.FromDays(30);
             UpdateSpace();
         }
 
-        public async void UpdateSpace () => Space =
-            Utilities.FormatBytes(await Task.Run(async () => await ClientCommands.GetAvailableSpaceAsync(Client, User)));
+        public async void UpdateSpace() {
+            Space = Utilities.FormatBytes(await Task.Run(async () => await ClientCommands.GetAvailableSpaceAsync(Client, User)));
+            PublicityTimeout = await Task.Run(async () => await ClientCommands.GetAutoDeletionTimeAsync(Client, User));
+        }
     }
 }

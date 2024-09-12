@@ -14,10 +14,10 @@ namespace Client {
             set => SetProperty(ref isPublic, value);
         }
 
-        public File ParentFolder { get; set; }
+        public File? ParentFolder { get; set; }
         public User User { get; set; }
 
-        public CreateWindowModel(File parentFolder, User user) {
+        public CreateWindowModel(File? parentFolder, User user) {
             ParentFolder = parentFolder;
             User = user;
         }
