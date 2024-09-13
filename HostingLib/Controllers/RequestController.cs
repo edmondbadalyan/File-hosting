@@ -59,14 +59,27 @@ namespace HostingLib.Controllers
         {
             ClientState state = new(client);
             client_states[client] = state;
-            CancellationTokenSource cts = new();
-            while (client.Connected || !cts.Token.IsCancellationRequested)
+            using CancellationTokenSource cts = new();
+            try
             {
-                await ReceiveRequestAsync(state, cts.Token);
+                while (client.Connected && !cts.Token.IsCancellationRequested)
+                {
+                    await ReceiveRequestAsync(state, cts.Token);
+                }
             }
-            LoggingController.LogDebug($"Client closed connection");
-            Console.WriteLine($"Client closed connection");
-            client_states.Remove(client);
+            catch (Exception ex)
+            {
+                LoggingController.LogError($"RequestController.HandleClientAsync - Exception: {ex.Message}");
+            }
+            finally
+            {
+                LoggingController.LogDebug($"Client {client.Client.RemoteEndPoint} closed connection");
+                Console.WriteLine($"Client {client.Client.RemoteEndPoint} closed connection");
+                cts.Cancel();
+                client.Close();
+                client.Dispose(); 
+                client_states.Remove(client);
+            }
         }
 
         public static async Task SendRequestAsync(TcpClient client, Request request, CancellationToken token)
@@ -81,6 +94,10 @@ namespace HostingLib.Controllers
             {
                 string received_json = await TCP.ReceiveString(state.Client);
                 Console.WriteLine(received_json);
+                if(string.IsNullOrEmpty(received_json))
+                {
+                    throw new InvalidOperationException("Received empty data from the client.");
+                }
                 LoggingController.LogDebug($"RequestControlller.ReceiveRequestAsync - Received {received_json}");
 
                 Request request = JsonConvert.DeserializeObject<Request>(received_json);
@@ -90,17 +107,10 @@ namespace HostingLib.Controllers
                 {
                     await ResponseController.SendResponseAsync(state.Client, response, token);
                 }
-                if (request.RequestType == Requests.CLOSE_CONNECTION)
-                {
-                    LoggingController.LogDebug($"Client {state.Client.Client.RemoteEndPoint} closed connection");
-                    Console.WriteLine($"Client {state.Client.Client.RemoteEndPoint} closed connection");
-                    state.Client.Close();
-                }
             }
             catch (Exception ex)
             {
                 LoggingController.LogError($"RequestController.ReceiveRequestAsync - Threw exception {ex}");
-                state.Client.Close();
             }
         }
 

@@ -633,10 +633,13 @@ namespace HostingLib.Controllers
 
                 await DeleteChildren(folder.Children, new_folder_path, context, user, token);
 
-                parent.Size -= folder.Size;
+                if(parent != null)
+                {
+                    parent.Size -= folder.Size;
+                    context.Update(parent);
+                }
 
                 context.Update(folder);
-                context.Update(parent);
                 await context.SaveChangesAsync(token);
 
                 await CachedDataController.ScheduleFileDeletionAsync(folder.Id.ToString(), user.AutoFileDeletionTime);
