@@ -32,13 +32,13 @@ namespace Client {
         }
 
         private async void Button_Send(object sender, RoutedEventArgs e) {
-            File? folder_to = await Task.Run(async () => await ClientCommands.GetFileAsync(Model.Client, Model.Path, Model.User));
+            File? folder_to = await Task.Run(async () => await ClientCommands.GetFileAsync(Model.user_singleton.Client, Model.Path, Model.user_singleton.User));
             if (folder_to is null) return;
             foreach (File file in Model.Files) {
                 if (file.IsDirectory)
-                    await Task.Run(async () => await ClientCommands.MoveFolderAsync(Model.Client, file, folder_to));
+                    await Task.Run(async () => await ClientCommands.MoveFolderAsync(Model.user_singleton.Client, file, folder_to));
                 else
-                    await Task.Run(async () => await ClientCommands.MoveFileAsync(Model.Client, file, folder_to));
+                    await Task.Run(async () => await ClientCommands.MoveFileAsync(Model.user_singleton.Client, file, folder_to));
             }
 
             Close();

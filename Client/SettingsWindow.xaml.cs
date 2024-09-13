@@ -22,8 +22,8 @@ namespace Client {
         private void Button_DarkTheme(object sender, RoutedEventArgs e) => window.Config.Theme = "dark";
 
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
-            await Task.Run(async () => await ClientCommands.UpdateUserPublicityAsync(Model.Client, Model.User, Model.Publicity));
-            await Task.Run(async () => await ClientCommands.UpdateUserFileDeletionTimeAsync(Model.Client, Model.User, Model.PublicityTimeout));
+            await Task.Run(async () => await ClientCommands.UpdateUserPublicityAsync(Model.user_singleton.Client, Model.user_singleton.User, Model.Publicity));
+            await Task.Run(async () => await ClientCommands.UpdateUserFileDeletionTimeAsync(Model.user_singleton.Client, Model.user_singleton.User, Model.PublicityTimeout));
         }
     }
 }

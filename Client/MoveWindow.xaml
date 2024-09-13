@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
-        Title="Сменить пароль" Height="200" Width="350">
+        Title="Перемещение" Height="200" Width="350">
     <StackPanel>
-        <TextBlock Margin="10">Новый пароль:</TextBlock>
+        <TextBlock Margin="10">Выберите куда переместить:</TextBlock>
         <ComboBox ItemsSource="{Binding AllPaths}"
                   Margin="10 30" Text="{Binding Path}"></ComboBox>
 

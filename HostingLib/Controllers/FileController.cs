@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -26,8 +27,19 @@ namespace HostingLib.Controllers
 
         #region File
 
-        public static async Task UploadFileAsync(TcpClient client, string? file_path, CancellationToken token, IProgress<double> progress = null)
+        public static async Task UploadFileAsync(TcpClient client, string? file_path, CancellationToken token, IProgress<(string file_name, double progress)> progress = null)
         {
+            string zip_file_path = null;
+            if(Directory.Exists(file_path))
+            {
+                string zipFileName = $"{Path.GetFileName(file_path)}.zip";
+                zip_file_path = Path.Combine(Path.GetTempPath(), zipFileName);
+                zip_file_path = Path.Combine(Path.GetTempPath(), $"{Path.GetFileName(file_path)}.zip");
+
+                ZipFile.CreateFromDirectory(file_path, zip_file_path);
+
+                file_path = zip_file_path;
+            }
             using FileStream uploaded_file = new(file_path, FileMode.Open, FileAccess.Read);
             try
             {
@@ -45,9 +57,17 @@ namespace HostingLib.Controllers
                 System.IO.File.Delete(file_path);
                 throw;
             }
+            finally
+            {
+                await uploaded_file.DisposeAsync();
+                if (zip_file_path != null)
+                {
+                    System.IO.File.Delete(zip_file_path);
+                }
+            }
         }
 
-        public static async Task DownloadFileAsync(TcpClient client, string? file_path, int user_id, int? parent_id, CancellationToken token, IProgress<double> progress = null)
+        public static async Task DownloadFileAsync(TcpClient client, string file_path, int user_id, int? parent_id, CancellationToken token, IProgress<(string file_name, double progress)> progress = null)
         {
             using FileStream new_file = System.IO.File.Create(file_path);
             try
@@ -57,6 +77,7 @@ namespace HostingLib.Controllers
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - Started receiving file");
 
                 await TCP.ReceiveFile(client, new_file, token, progress);
+
                 LoggingController.LogDebug($"FileController.DownloadFileAsync - File received successfully");
 
                 await CachedDataController.RemoveCacheAsync($"{UserController.CachePrefix}space:{user_id}");
@@ -83,10 +104,23 @@ namespace HostingLib.Controllers
                 string file_path = Path.Combine(StoragePath, user_id.ToString(), info.Name);
                 Data.Entities.File file = new(info.Name, file_path, info.Length, info.LastWriteTime, user_id, parent_id, false, false, isPublic);
 
+                Data.Entities.File parent;
+
+                if (parent_id != null)
+                {
+                    parent = await context.Entry(file)
+                        .Reference(f => f.Parent) 
+                        .Query()
+                        .SingleOrDefaultAsync(token);
+                    parent.Size += file.Size;
+                    context.Files.Update(parent);
+                }
+
                 context.Files.Add(file);
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.CreateFile - file {file.Name} created successfully with path {file.Path} belonging to user {user_id}");
+
 
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}all:{user_id}");
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}{user_id}:{parent_id}");
@@ -245,7 +279,14 @@ namespace HostingLib.Controllers
                 file.Path = new_path;
                 file.ParentId = new_folder.Id;
 
+                Data.Entities.File folder = await context.Files
+                    .Where(f => f.Path == folder_to)
+                    .SingleOrDefaultAsync(token);
+
+                folder.Size += file.Size;
+
                 context.Files.Update(file);
+                context.Files.Update(folder);
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.MoveFile - File {file.Id} {file.Name} moved successfully to {new_path}");
@@ -276,6 +317,7 @@ namespace HostingLib.Controllers
                 LoggingController.LogInfo($"FileController.UpdatePublicity - File {file.Id} {file.Name} publicity updated");
 
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}public:{file.UserId}");
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}all:{file.UserId}");
                 LoggingController.LogDebug($"FileController.UpdateFilePublicity - Cleaned up cache");
             }
             finally
@@ -292,12 +334,19 @@ namespace HostingLib.Controllers
                 token.ThrowIfCancellationRequested();
                 string new_path = Path.Combine(StoragePath, file.UserId.ToString(), "Deleted", file.Name);
 
+                Data.Entities.File parent = await context.Entry(file)
+                    .Reference(f => f.Parent) 
+                    .Query()
+                    .SingleOrDefaultAsync(token);
+
                 LoggingController.LogDebug($"FileController.DeleteFile - Moving file {file.Name} to {new_path}");
                 System.IO.File.Move(file.Path, new_path);
                 file.Path = new_path;
                 file.IsDeleted = true;
+                parent.Size -= file.Size;
 
                 context.Files.Update(file);
+                context.Files.Update(parent);
                 await context.SaveChangesAsync(token);
 
                 User user = await UserController.GetUserByIdAsync(file.UserId, token);
@@ -462,16 +511,25 @@ namespace HostingLib.Controllers
                 LoggingController.LogDebug($"FileController.MoveFolder - moving folder {folder.Name} to {new_folder_path}");
                 Directory.Move(folder.Path, new_folder_path);
                 folder.Path = new_folder_path;
+                folder.ParentId = new_folder.Id;
+
+                new_folder.Size += folder.Size;
 
                 await UpdateFolderPathsRecursive(folder, new_folder_path, context, token);
 
-                await CachedDataController.RemoveCacheAsync($"{CachePrefix}{folder.UserId}:{folder.ParentId}");
                 context.Update(folder);
+                context.Update(new_folder);
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"FileController.MoveFolder - folder {folder.Name} moved successfully to {new_folder_path}");
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}{folder.UserId}:{folder.ParentId}");
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}{folder.UserId}:{new_folder.ParentId}");
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}all:{folder.UserId}");
                 LoggingController.LogDebug($"FileController.MoveFolder - Cleaned up cache for folder");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
             }
             finally
             {
@@ -481,7 +539,7 @@ namespace HostingLib.Controllers
 
         private static async Task LoadFolderChildrenRecursive(Data.Entities.File folder, HostingDbContext context, CancellationToken token)
         {
-            await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
+            await LoadChildrenDistinctAsync(folder, context, token);
 
             foreach (var child in folder.Children.Where(f => f.IsDirectory)) 
             {
@@ -516,7 +574,7 @@ namespace HostingLib.Controllers
             {
                 token.ThrowIfCancellationRequested();
 
-                await context.Entry(folder).Collection(f => f.Children).LoadAsync(token);
+                await LoadChildrenDistinctAsync (folder, context, token);
 
                 folder.IsPublic = publicity;
 
@@ -526,6 +584,7 @@ namespace HostingLib.Controllers
 
                 LoggingController.LogInfo($"FileController.UpdateFolderPublicity - folder {folder.Name} publicity updated");
 
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}all:{folder.UserId}");
                 await CachedDataController.RemoveCacheAsync($"{CachePrefix}public:{folder.UserId}");
                 LoggingController.LogDebug($"FileController.UpdateFolderPublicity - Cleaned up cache");
             }
@@ -546,7 +605,7 @@ namespace HostingLib.Controllers
 
                 if (child.IsDirectory)
                 {
-                    await context.Entry(child).Collection(f => f.Children).LoadAsync(token);
+                    await LoadChildrenDistinctAsync(child, context, token);
                     await UpdateChildPublicityAsync(child.Children, publicity, context, token);
                 }
             }
@@ -557,7 +616,6 @@ namespace HostingLib.Controllers
             try {
                 token.ThrowIfCancellationRequested();
 
-                // Load children explicitly to avoid duplicates and check for tracking issues
                 await LoadChildrenDistinctAsync(folder, context, token);
 
                 string new_folder_path = Path.Combine(StoragePath, folder.UserId.ToString(), "Deleted", folder.Name);
@@ -568,10 +626,17 @@ namespace HostingLib.Controllers
                 folder.IsDeleted = true;
 
                 User user = await UserController.GetUserByIdAsync(folder.UserId, token);
+                Data.Entities.File parent = await context.Entry(folder)
+                    .Reference(f => f.Parent) // Load the parent folder
+                    .Query()
+                    .SingleOrDefaultAsync(token);
 
                 await DeleteChildren(folder.Children, new_folder_path, context, user, token);
 
+                parent.Size -= folder.Size;
+
                 context.Update(folder);
+                context.Update(parent);
                 await context.SaveChangesAsync(token);
 
                 await CachedDataController.ScheduleFileDeletionAsync(folder.Id.ToString(), user.AutoFileDeletionTime);

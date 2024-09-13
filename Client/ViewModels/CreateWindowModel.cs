@@ -1,4 +1,5 @@
-﻿using HostingLib.Data.Entities;
+﻿using Client.Services;
+using HostingLib.Data.Entities;
 
 namespace Client {
     public class CreateWindowModel : BindableBase {
@@ -15,11 +16,11 @@ namespace Client {
         }
 
         public File? ParentFolder { get; set; }
-        public User User { get; set; }
+        public readonly UserSingleton user_singleton;
 
-        public CreateWindowModel(File? parentFolder, User user) {
+        public CreateWindowModel(File? parentFolder) {
+            user_singleton = UserSingleton.GetInstance();
             ParentFolder = parentFolder;
-            User = user;
         }
     }
 }

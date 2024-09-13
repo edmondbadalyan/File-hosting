@@ -26,6 +26,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Files\3\Deleted\" />
+    <Folder Include="Files\" />
   </ItemGroup>
 </Project>

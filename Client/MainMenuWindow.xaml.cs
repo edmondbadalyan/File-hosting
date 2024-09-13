@@ -28,11 +28,23 @@ namespace Client {
             }
 
             IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
+
+            var file_names = files.Select(file => file.Name);
+
+            ProgressWindow progress_window = new (file_names);
+            progress_window.Show();
+
+            var progress = new Progress<(string fileName, double percentage)>(progressInfo =>
+            {
+                progress_window.UpdateProgress(progressInfo.fileName, progressInfo.percentage);
+            });
+
             foreach (File file in files) {
-                await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.Client, System.IO.Path.Combine(whereto, file.Name), file, Model.User));
+                await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.user_singleton.Client, System.IO.Path.Combine(whereto, file.IsDirectory ? file.Name + ".zip" : file.Name), file, Model.user_singleton.User, progress));
             }
 
             await Model.Update();
+            progress_window.Close();
         }
 
         private async void Button_Upload(object sender, RoutedEventArgs e) {
@@ -45,36 +57,74 @@ namespace Client {
             if (System.Windows.Forms.MessageBox.Show("Сделать файлы публичными?", "Сделать файлы публичными?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 isPublic = true;
 
+            ProgressWindow progress_window = new(fileNames);
+            progress_window.Show();
+
+            var progress = new Progress<(string fileName, double percentage)>(progressInfo =>
+            {
+                progress_window.UpdateProgress(progressInfo.fileName, progressInfo.percentage);
+            });
+
+
             File? whereto = Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId);
             foreach (string file in fileNames) {
-                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.Client, file, Model.User, whereto, isPublic));
+                await Task.Run(async () => await ClientCommands.UploadFileAsync(Model.user_singleton.Client, file, Model.user_singleton.User, whereto, isPublic, progress));
             }
 
             await Model.Update();
+            progress_window.Close();
         }
 
         private async void Button_Create(object sender, RoutedEventArgs e) {
-            CreateWindow window = new CreateWindow(mainWindow, new(Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId), Model.User));
+            CreateWindow window = new CreateWindow(mainWindow, new(Model.AllFiles.FirstOrDefault(File => File.Id == Model.SelectedFolderId)));
             window.ShowDialog();
             await Model.Update();
         }
 
-        private async void Button_Move(object sender, RoutedEventArgs e) {
-            IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
-            List<string> folders = Model.AllFiles.Where(file => file.IsDirectory).Select(file => file.Path).ToList();
-            MoveWindow window = new MoveWindow(mainWindow, new(Model.User, Model.Client, files, folders));
+        private async void Button_Move(object sender, RoutedEventArgs e)
+        {
+            IReadOnlyList<File> selected_files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
+
+            HashSet<string> selected_directories = selected_files
+                .Where(file => file.IsDirectory)
+                .Select(file => file.Path)
+                .ToHashSet(); 
+
+            HashSet<string> child_directories = new ();
+            foreach (string directory in selected_directories)
+            {
+                var children = Model.AllFiles
+                    .Where(file => file.Path.StartsWith(directory) && file.Path != directory && file.IsDirectory)
+                    .Select(file => file.Path);
+
+                foreach (string child in children)
+                {
+                    child_directories.Add(child);
+                }
+            }
+
+            HashSet<string> excluded_directories = new(selected_directories);
+            excluded_directories.UnionWith(child_directories);
+
+            List<string> folders = Model.AllFiles
+                .Where(file => file.IsDirectory && !excluded_directories.Contains(file.Path))
+                .Select(file => file.Path)
+                .ToList();
+
+            MoveWindow window = new (mainWindow, new(Model.user_singleton.User, Model.user_singleton.Client, selected_files, folders));
             window.ShowDialog();
 
             await Model.Update();
         }
+
 
         private async void Button_Delete(object sender, RoutedEventArgs e) {
             IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {
                 if (file.IsDirectory) 
-                    await Task.Run(async () => await ClientCommands.DeleteFolderAsync(Model.Client, file));
+                    await Task.Run(async () => await ClientCommands.DeleteFolderAsync(Model.user_singleton.Client, file));
                 else
-                    await Task.Run(async () => await ClientCommands.DeleteFileAsync(Model.Client, file));
+                    await Task.Run(async () => await ClientCommands.DeleteFileAsync(Model.user_singleton.Client, file));
             }
 
             await Model.Update();
@@ -85,7 +135,7 @@ namespace Client {
         }
 
         private void Button_Settings(object sender, RoutedEventArgs e) {
-            SettingsWindow window = new SettingsWindow(mainWindow, new (Model.User, Model.Client));
+            SettingsWindow window = new SettingsWindow(mainWindow, new (Model.user_singleton.User, Model.user_singleton.Client));
             window.ShowDialog();
         }
 
@@ -125,7 +175,7 @@ namespace Client {
         }
 
         private void Button_Others(object sender, RoutedEventArgs e) {
-            PublicFilesWindow window = new PublicFilesWindow(this, new(Model.User, Model.Client));
+            PublicFilesWindow window = new PublicFilesWindow(this, new(Model.user_singleton.User, Model.user_singleton.Client));
             this.Visibility = Visibility.Hidden;
             window.ShowDialog();
         }

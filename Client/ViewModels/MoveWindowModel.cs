@@ -1,4 +1,5 @@
-﻿using HostingLib.Data.Entities;
+﻿using Client.Services;
+using HostingLib.Data.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace Client;
 public class MoveWindowModel : BindableBase {
-    public User User { get; set; }
-    public TcpClient Client { get; set; }
+    public readonly UserSingleton user_singleton;
+
     public IReadOnlyList<File> Files { get; set; }
 
     private string path;
@@ -25,8 +26,7 @@ public class MoveWindowModel : BindableBase {
     }
 
     public MoveWindowModel(User user, TcpClient client, IReadOnlyList<File> files, List<string> allPaths) {
-        User = user;
-        Client = client;
+        user_singleton = UserSingleton.GetInstance();
         Files = files;
         Path = "";
         AllPaths = allPaths;

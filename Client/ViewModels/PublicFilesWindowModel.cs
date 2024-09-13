@@ -1,11 +1,11 @@
-﻿using HostingLib.Data.Entities;
+﻿using Client.Services;
+using HostingLib.Data.Entities;
 using System.Net.Sockets;
 using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
     public class PublicFilesWindowModel : BindableBase {
-        public User User { get; set; }
-        public TcpClient Client { get; set; }
+        public readonly UserSingleton user_singleton;
 
         private List<FileModel> files;
         public List<FileModel> Files {
@@ -43,8 +43,7 @@ namespace Client {
         }
 
         public PublicFilesWindowModel(User user, TcpClient client) {
-            User = user;
-            Client = client;
+            user_singleton = UserSingleton.GetInstance();
             Files = new List<FileModel>();
             AllFiles = new List<File>();
             Task.Run(() => Update());
@@ -56,7 +55,7 @@ namespace Client {
 
         public async Task Update() {
             if (FoundUser is null) return;
-            AllFiles = (List<File>)await Task.Run(async () => await ClientCommands.GetPublicFilesAsync(Client, FoundUser));
+            AllFiles = (List<File>)await Task.Run(async () => await ClientCommands.GetPublicFilesAsync(user_singleton.Client, FoundUser));
             Files = AllFiles.Where(File => File.ParentId == SelectedFolderId).Select((File) => new FileModel(File)).ToList();
         }
     }

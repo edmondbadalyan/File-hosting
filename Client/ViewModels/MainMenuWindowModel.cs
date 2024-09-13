@@ -1,11 +1,11 @@
-﻿using HostingLib.Data.Entities;
+﻿using Client.Services;
+using HostingLib.Data.Entities;
 using System.Net.Sockets;
 using ClientCommands = HostingLib.Сlient.Client;
 
 namespace Client {
     public class MainMenuWindowModel : BindableBase{
-        public User User { get; set; }
-        public TcpClient Client { get; set; }
+        public readonly UserSingleton user_singleton;
 
         private List<FileModel> files;
         public List<FileModel> Files {
@@ -35,9 +35,8 @@ namespace Client {
             set => SetProperty(ref selectedFolderId, value);
         }
 
-        public MainMenuWindowModel(User user, TcpClient client) {
-            User = user;
-            Client = client;
+        public MainMenuWindowModel(TcpClient client) {
+            user_singleton = UserSingleton.GetInstance();
             Files = new List<FileModel>();
             AllFiles = new List<File>();
             Task.Run(() => Update());
@@ -46,7 +45,7 @@ namespace Client {
         }
 
         public async Task Update() {
-            AllFiles = (List<File>) await Task.Run(async () => await ClientCommands.GetAllFilesAsync(Client, User));
+            AllFiles = (List<File>) await Task.Run(async () => await ClientCommands.GetAllFilesAsync(user_singleton.Client, user_singleton.User));
             Files = AllFiles.Where(File => File.ParentId == SelectedFolderId && !File.IsDeleted).Select((File) => new FileModel(File)).ToList();
         }
     }

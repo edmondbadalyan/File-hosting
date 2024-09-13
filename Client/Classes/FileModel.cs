@@ -37,7 +37,10 @@ namespace Client {
         }
 
         private async void Update(bool publicity) {
-            await Task.Run(async () => await ClientCommands.UpdateFilePublicity(MainWindow.Server, File, publicity));
+            if (!File.IsDirectory)
+                await Task.Run(async () => await ClientCommands.UpdateFilePublicity(MainWindow.Server, File, publicity));
+            else
+                await Task.Run(async () => await ClientCommands.UpdateFolderPublicity(MainWindow.Server, File, publicity));
         }
     }
 }

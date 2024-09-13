@@ -1,7 +1,9 @@
 ﻿using HostingLib.Classes;
 using HostingLib.Controllers;
+using HostingLib.Data.Context;
 using HostingLib.Data.Entities;
 using HostingLib.Helpers;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -401,7 +403,12 @@ namespace HostingLib.Handlers
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 FileDetails info = JsonConvert.DeserializeObject<FileDetails>(payload.FileDetails);
-                string file_path = Path.Combine(FileController.StoragePath, payload.UserId.ToString(), info.Name);
+                int? parent_id = payload.ParentId is not null ? int.Parse(payload.ParentId) : null;
+                string user_path = Path.Combine(FileController.StoragePath, payload.UserId.ToString());
+
+                using HostingDbContext db = new();
+                Data.Entities.File parent = await db.Files.SingleOrDefaultAsync(f => f.Id == parent_id, token);
+                string file_path = Path.Combine(parent is null ? user_path : parent.Path, info.Name);
 
                 if (System.IO.File.Exists(file_path))
                 {
@@ -414,7 +421,7 @@ namespace HostingLib.Handlers
 
                 try
                 {
-                    await FileController.DownloadFileAsync(state.Client, file_path, payload.UserId, payload.ParentId != null ? int.Parse(payload.ParentId) : null, token);
+                    await FileController.DownloadFileAsync(state.Client, file_path, payload.UserId, parent_id : null, token);
                 }
                 catch (Exception ex) when (ex is IOException || ex is SocketException)
                 {
@@ -422,7 +429,7 @@ namespace HostingLib.Handlers
                     return new Response(Responses.Fail, Payloads.MESSAGE, "Connection was lost during file upload.");
                 }
 
-                await FileController.CreateFile(info, payload.UserId, payload.ParentId != null ? int.Parse(payload.ParentId) : null, payload.IsPublic, token);
+                await FileController.CreateFile(info, payload.UserId, parent_id, payload.IsPublic, token);
 
                 return new Response(Responses.Success, Payloads.MESSAGE, "File uploaded successfully!");
             }
@@ -446,7 +453,7 @@ namespace HostingLib.Handlers
             {
                 FilePayload payload = JsonConvert.DeserializeObject<FilePayload>(request.Payload);
                 Data.Entities.File file = JsonConvert.DeserializeObject<Data.Entities.File>(payload.File);
-                string file_path = Path.Combine(FileController.StoragePath, payload.UserId.ToString(), file.Name);
+                string file_path = Path.Combine(FileController.StoragePath, file.UserId.ToString(), file.Name);
 
                 if(file.UserId != payload.UserId && !file.IsPublic)
                 {

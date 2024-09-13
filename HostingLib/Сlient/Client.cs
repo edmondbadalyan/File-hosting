@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -255,7 +256,7 @@ namespace HostingLib.Сlient
 
         #region File
 
-        public static async Task<Response> UploadFileAsync(TcpClient server, string from_file_path, User user, Data.Entities.File? parent, bool isPublic, IProgress<double> progress = null)
+        public static async Task<Response> UploadFileAsync(TcpClient server, string from_file_path, User user, Data.Entities.File? parent, bool isPublic, IProgress<(string file_name, double progress)> progress = null)
         {
             CancellationTokenSource cts = new();
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
@@ -283,9 +284,9 @@ namespace HostingLib.Сlient
                     return response;
                 }
 
-                var progress_handler = new Progress<double>(value =>
+                var progress_handler = new Progress<(string fileName, double progress)>(progressValue =>
                 {
-                    progress?.Report(value);
+                    progress?.Report(progressValue);
                 });
 
                 await FileController.UploadFileAsync(server, from_file_path, cts.Token, progress_handler);
@@ -301,7 +302,7 @@ namespace HostingLib.Сlient
 
         }
 
-        public static async Task DownloadFileAsync(TcpClient server, string to_file_path, Data.Entities.File file, User user, IProgress<double> progress = null)
+        public static async Task DownloadFileAsync(TcpClient server, string to_file_path, Data.Entities.File file, User user, IProgress<(string file_name, double progress)> progress = null)
         {
             CancellationTokenSource cts = new CancellationTokenSource();
             var (key, iv) = EncryptionController.GenerateKeyAndIv();
@@ -322,9 +323,9 @@ namespace HostingLib.Сlient
                 }
                 else
                 {
-                    var progress_handler = new Progress<double>(value =>
+                    var progress_handler = new Progress<(string fileName, double progress)>(progressValue =>
                     {
-                        progress?.Report(value);
+                        progress?.Report(progressValue);
                     });
 
                     await FileController.DownloadFileAsync(server, to_file_path, user.Id, null, cts.Token, progress_handler);

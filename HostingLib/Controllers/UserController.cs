@@ -44,7 +44,7 @@ namespace HostingLib.Controllers
             token.ThrowIfCancellationRequested();
 
             long user_space = await context.Files
-                .Where(f => f.UserId == user_id)
+                .Where(f => f.UserId == user_id && f.ParentId == null)
                 .SumAsync(f => f.Size, token);
 
             long available_space = UserQuota - user_space;
@@ -86,10 +86,21 @@ namespace HostingLib.Controllers
             using HostingDbContext context = new();
             token.ThrowIfCancellationRequested();
 
+            string cache_key = $"{CachePrefix}{email}";
+
+            User cached_user = await CachedDataController.GetValueAsync<User>(cache_key);
+
+            if (cached_user is not null)
+            {
+                LoggingController.LogInfo($"UserController.GetUserAsync - Cache hit for user {email}");
+                return cached_user;
+            }
+
             try
             {
                 User user = await context.Users.SingleOrDefaultAsync(u => u.Email == email, token);
                 LoggingController.LogInfo($"UserController.GetUserAsync - Request for email {email} returned user ID: {user?.Id}");
+                await CachedDataController.SetValueAsync(cache_key, user);
                 return user;
             }
             catch (Exception ex)
@@ -176,6 +187,9 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"UserController.UpdateUserAsync - Updated password for user {user.Email}");
+
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}{user.Email}");
+                LoggingController.LogDebug($"UserController.UpdateUserAsync - Cleaned up cache");
             }
             catch (Exception ex)
             {
@@ -197,6 +211,9 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"UserController.UpdateUserPublicityAsync - Updated publicity for user {user.Email}");
+
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}{user.Email}");
+                LoggingController.LogDebug($"UserController.UpdateUserAsync - Cleaned up cache");
             }
             catch (Exception ex)
             {
@@ -218,6 +235,9 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"UserController.UpdateUserFileDeletionTimeAsync - Updated file deletion time for user {user.Email}");
+
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}{user.Email}");
+                LoggingController.LogDebug($"UserController.UpdateUserAsync - Cleaned up cache");
             }
             catch (Exception ex)
             {
@@ -237,6 +257,9 @@ namespace HostingLib.Controllers
                 await context.SaveChangesAsync(token);
 
                 LoggingController.LogInfo($"UserController.DeleteUserAsync - Deleted user {user.Id} ({user.Email})");
+
+                await CachedDataController.RemoveCacheAsync($"{CachePrefix}{user.Email}");
+                LoggingController.LogDebug($"UserController.UpdateUserAsync - Cleaned up cache");
             }
             catch (Exception ex)
             {

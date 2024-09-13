@@ -1,4 +1,5 @@
-﻿using HostingLib.Data.Entities;
+﻿using Client.Services;
+using HostingLib.Data.Entities;
 using System.Windows;
 using System.Windows.Controls;
 using ClientCommands = HostingLib.Сlient.Client;
@@ -12,6 +13,7 @@ namespace Client {
         MainWindow mainWindow;
         LoginWindowModel Model { get; set; }
         PasswordBox PasswordBox { get; set; }
+        UserSingleton user_singleton = UserSingleton.GetInstance();
 
         public LoginWindow(MainWindow mainWindow, LoginWindowModel model) {
             InitializeComponent();
@@ -55,8 +57,8 @@ namespace Client {
             }
             await Task.Run(async () => await ClientCommands.AuthenticateUserAsync(MainWindow.Server, user, PasswordBox.Password));
 
-
-            MainMenuWindow window = new MainMenuWindow(mainWindow, new(user, MainWindow.Server));
+            user_singleton.Initialize(user, MainWindow.Server);
+            MainMenuWindow window = new MainMenuWindow(mainWindow, new(MainWindow.Server));
             this.Visibility = Visibility.Hidden;
             window.ShowDialog();
         }

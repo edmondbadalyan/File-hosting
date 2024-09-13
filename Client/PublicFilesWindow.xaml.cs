@@ -29,7 +29,7 @@ namespace Client {
 
             IReadOnlyList<File> files = dg.SelectedItems.Cast<FileModel>().Select(FileModel => FileModel.File).ToArray();
             foreach (File file in files) {
-                await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.Client, System.IO.Path.Combine(whereto, file.Name), file, Model.User));
+                await Task.Run(async () => await ClientCommands.DownloadFileAsync(Model.user_singleton.Client, System.IO.Path.Combine(whereto, file.Name), file, Model.user_singleton.User));
             }
 
             await Model.Update();
@@ -73,7 +73,7 @@ namespace Client {
                 System.Windows.Forms.MessageBox.Show("Введите email пользователя");
                 return;
             }
-            User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(Model.Client, Model.UserSearch));
+            User? user = await Task.Run(async () => await ClientCommands.GetUserAsync(Model.user_singleton.Client, Model.UserSearch));
             if (user is null) {
                 System.Windows.Forms.MessageBox.Show("Данный пользователь не существует");
                 return;

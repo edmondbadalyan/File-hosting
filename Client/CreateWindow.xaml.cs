@@ -18,7 +18,7 @@ namespace Client {
         }
 
         private async void Button_Create(object sender, RoutedEventArgs e) {
-            await Task.Run(async () => await ClientCommands.CreateFolderAsync(MainWindow.Server, Model.FolderName, Model.User, Model.ParentFolder, Model.IsPublic));
+            await Task.Run(async () => await ClientCommands.CreateFolderAsync(MainWindow.Server, Model.FolderName, Model.user_singleton.User, Model.ParentFolder, Model.IsPublic));
             Close();
         }
     }

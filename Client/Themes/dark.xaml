@@ -22,6 +22,7 @@
 
     <Style TargetType="{x:Type ProgressBar}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
         <Setter Property="Background" Value="DimGray"/>
+        <Setter Property="Foreground" Value="Aqua"/>
     </Style>
 
     <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
